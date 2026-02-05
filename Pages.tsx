@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
   Loader2, Play, Film, Tv, Sparkles, Search, Compass, Laugh, CloudRain, Rocket, Gem, Ghost, Eye, Bookmark, UserCircle, Baby, Moon, Sun, Inbox 
 } from 'lucide-react';
@@ -112,6 +112,24 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
     setSearching(true);
     try { const data = await API.searchMovies(q, f, user.isKidsMode); setResults(data || []); } finally { setSearching(false); }
   };
+  
+  // Animation Variants
+  const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { staggerChildren: 0.05 }
+    }
+  };
+
+  const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { type: 'spring', stiffness: 300, damping: 24 }
+    }
+  };
 
   return (
     <div className="pt-24 px-6 pb-32 max-w-5xl mx-auto w-full">
@@ -144,11 +162,19 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
         )}
         
         {results.length > 0 && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+            <motion.div 
+              key={query + filter} // Triggers animation on new search
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4"
+            >
                 {results.map(m => (
-                    <MovieCard key={m.id} movie={m} onClick={() => onSelectMovie(m)} isWatched={user.watched.includes(m.id)} isInWatchlist={user.watchlist.some((w: any) => w.id === m.id)} fullWidth />
+                    <motion.div key={m.id} variants={itemVariants}>
+                      <MovieCard movie={m} onClick={() => onSelectMovie(m)} isWatched={user.watched.includes(m.id)} isInWatchlist={user.watchlist.some((w: any) => w.id === m.id)} fullWidth />
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         )}
     </div>
   );

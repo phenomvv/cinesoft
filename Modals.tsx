@@ -1,7 +1,7 @@
 import React, { useState, useEffect, memo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
-  X, Star, Play, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon, ExternalLink 
+  X, Star, Play, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon 
 } from 'lucide-react';
 import { Movie, Episode, Person, Season } from './types';
 import * as GeminiAPI from './geminiService';
@@ -70,18 +70,6 @@ export const VideoModal = ({ url, onClose }: any) => {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           />
         </motion.div>
-        
-        <div className="flex flex-col items-center gap-2 text-center">
-            <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold">Having trouble playing?</p>
-            <a 
-              href={url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="flex items-center gap-2 px-8 py-3 bg-[#6B46C1] rounded-xl text-white text-xs font-black uppercase tracking-widest shadow-lg shadow-purple-900/30 active:scale-95 transition-all hover:bg-[#553C9A]"
-            >
-              <ExternalLink size={16} /> Open in YouTube App
-            </a>
-        </div>
       </div>
     </motion.div>
   );
@@ -177,6 +165,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
 
   const currentSeason = movie.seasons?.find((s: Season) => s.number === activeSeason);
   const bgImage = movie.backdrop || movie.poster;
+  const displayGenre = movie.genres && movie.genres.length > 0 ? movie.genres[0] : movie.type === 'movie' ? 'MOVIE' : 'TV SHOW';
 
   return (
     <motion.div initial="initial" animate="animate" exit="exit" variants={modalOverlay} className="fixed inset-0 z-[400] bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center">
@@ -208,7 +197,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                   <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     <span>{movie.year}</span>
                     <span className="w-1 h-1 bg-gray-600 rounded-full" />
-                    <span>{movie.type}</span>
+                    <span className="text-gray-200">{displayGenre}</span>
                     <span className="w-1 h-1 bg-gray-600 rounded-full" />
                     <div className="flex items-center gap-1 text-yellow-500"><Star size={10} fill="currentColor" /> {getCommunityRating(movie.id, movie.rating)}</div>
                   </div>
@@ -218,7 +207,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
              <div className="grid grid-cols-4 gap-3">
                 {[ { icon: Bookmark, label: 'LIST', active: isInW, action: handleWatchlist, fill: true },
                    { icon: CheckCircle2, label: 'SEEN', active: isW, action: handleWatched, fill: false },
-                   { icon: Heart, label: 'LIKE', active: isFav, action: toggleFav, fill: true },
+                   { icon: Heart, label: 'FAV', active: isFav, action: toggleFav, fill: true },
                    { icon: PlayCircle, label: 'TRAILER', active: !!movie.trailerUrl, action: () => movie.trailerUrl && onPlayTrailer(movie.trailerUrl), dark: true, fill: false }
                 ].map((btn, i) => (
                   <button key={i} onClick={btn.action} className={`flex flex-col items-center justify-center py-3 rounded-2xl border transition-all active:scale-95 ${btn.dark ? 'bg-white text-black border-transparent shadow-lg' : btn.active ? 'bg-[#6B46C1] text-white border-transparent' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10'}`}>
@@ -295,11 +284,14 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
 export const PersonModal = memo(({ name, onClose, onSelectMovie }: any) => {
   const [person, setPerson] = useState<Person | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isBioExpanded, setIsBioExpanded] = useState(false);
 
   useEffect(() => {
     setLoading(true);
     API.fetchPersonDetails(name).then(d => { setPerson(d); setLoading(false); });
   }, [name]);
+
+  const isLongBio = person?.bio && person.bio.length > 250;
 
   return (
     <motion.div initial="initial" animate="animate" exit="exit" variants={modalOverlay} className="fixed inset-0 z-[450] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
@@ -314,7 +306,21 @@ export const PersonModal = memo(({ name, onClose, onSelectMovie }: any) => {
               <h2 className="text-2xl font-black text-white tracking-tight">{person.name}</h2>
               <p className="text-[#6B46C1] font-bold text-[10px] uppercase tracking-widest mt-1">{person.role}</p>
             </div>
-            <p className="text-sm text-gray-400 mb-8 leading-relaxed line-clamp-[10]">{person.bio}</p>
+            
+            <p className={`text-sm text-gray-400 mb-2 leading-relaxed ${isBioExpanded ? '' : 'line-clamp-4'}`}>
+              {person.bio}
+            </p>
+            {isLongBio && (
+              <button 
+                onClick={() => setIsBioExpanded(!isBioExpanded)} 
+                className="text-[#6B46C1] text-[10px] font-black uppercase tracking-widest mb-8 hover:text-white transition-colors"
+              >
+                {isBioExpanded ? 'Read Less' : 'Read More'}
+              </button>
+            )}
+
+            {!isLongBio && <div className="mb-6"></div>}
+
             <h4 className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-4">KNOWN FOR</h4>
             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-8 px-8">
               {person.knownFor.map((m: any) => (<MovieCard key={m.id} movie={m} onClick={() => { onSelectMovie(m); onClose(); }} />))}

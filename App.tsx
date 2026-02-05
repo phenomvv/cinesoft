@@ -33,12 +33,14 @@ const PersonModal = lazy(() => import('./Modals').then(m => ({ default: m.Person
 const VideoModal = lazy(() => import('./Modals').then(m => ({ default: m.VideoModal })));
 
 const App = () => {
+  // Robust initialization: Merges saved data with DEFAULT_USER to ensure new schema fields exist
   const [user, setUser] = useState<User>(() => { 
     try {
       const saved = localStorage.getItem('cinesoft_user'); 
-      return saved ? JSON.parse(saved) : DEFAULT_USER; 
+      return saved ? { ...DEFAULT_USER, ...JSON.parse(saved) } : DEFAULT_USER; 
     } catch { return DEFAULT_USER; }
   });
+  
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('cinesoft_theme') as Theme) || 'dark');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
