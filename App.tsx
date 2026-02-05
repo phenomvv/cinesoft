@@ -18,6 +18,8 @@ const DEFAULT_USER: User = {
   traktConnected: false,
   traktUsername: null,
   watchlist: [],
+  favorites: [],
+  watchedHistory: [],
   watched: [],
   watchedEpisodes: [],
   userRatings: {},
@@ -98,7 +100,25 @@ const App = () => {
   
   const onToggleWatched = (movie: Movie) => setUser(prev => { 
     const exists = prev.watched.includes(movie.id); 
-    return { ...prev, watched: exists ? prev.watched.filter(id => id !== movie.id) : [...prev.watched, movie.id] }; 
+    const updatedHistory = exists 
+      ? prev.watchedHistory.filter(m => m.id !== movie.id) 
+      : [...prev.watchedHistory, movie];
+    return { 
+      ...prev, 
+      watched: exists ? prev.watched.filter(id => id !== movie.id) : [...prev.watched, movie.id],
+      watchedHistory: updatedHistory
+    }; 
+  });
+
+  const onToggleFavorite = (movie: Movie) => setUser(prev => {
+    const exists = prev.favoriteMovieIds.includes(movie.id);
+    const updatedIds = exists 
+      ? prev.favoriteMovieIds.filter(id => id !== movie.id) 
+      : [...prev.favoriteMovieIds, movie.id];
+    const updatedList = exists 
+      ? prev.favorites.filter(m => m.id !== movie.id) 
+      : [...prev.favorites, movie];
+    return { ...prev, favoriteMovieIds: updatedIds, favorites: updatedList };
   });
 
   return (
@@ -136,6 +156,7 @@ const App = () => {
                 setUser={setUser} 
                 onToggleWatchlist={onToggleWatchlist} 
                 onToggleWatched={onToggleWatched} 
+                onToggleFavorite={onToggleFavorite}
                 onSelectPerson={setSelectedPerson} 
                 onPlayTrailer={setActiveTrailerUrl}
                 onShowToast={showToast} 

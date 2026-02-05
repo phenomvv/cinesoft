@@ -182,7 +182,11 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
 
 export const LibraryPage = memo(({ user, onSelectMovie }: any) => {
   const [tab, setTab] = useState<'watchlist' | 'watched' | 'favorites'>('watchlist');
-  const items = tab === 'watchlist' ? user.watchlist : (tab === 'watched' ? user.watchlist.filter((m: any) => user.watched.includes(m.id)) : user.watchlist.filter((m: any) => user.favoriteMovieIds?.includes(m.id)));
+  
+  // Use dedicated arrays for each tab to ensure all faves/watched appear even if not on watchlist
+  const items = tab === 'watchlist' 
+    ? (user.watchlist || []) 
+    : (tab === 'watched' ? (user.watchedHistory || []) : (user.favorites || []));
   
   return (
     <div className="pt-24 px-6 pb-32 max-w-5xl mx-auto w-full">

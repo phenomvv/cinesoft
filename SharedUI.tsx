@@ -65,23 +65,30 @@ export const GlobalHeader = memo(({ user }: { user: User }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    let ticking = false;
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          setIsScrolled(window.scrollY > 20);
-          ticking = false;
-        });
-        ticking = true;
+    const handleScroll = () => {
+      // Since #root is the scrollable container now
+      const root = document.getElementById('root');
+      if (root) {
+        setIsScrolled(root.scrollTop > 20);
       }
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    
+    const root = document.getElementById('root');
+    if (root) {
+      root.addEventListener("scroll", handleScroll, { passive: true });
+    }
+    return () => {
+      if (root) root.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-[150] px-6 flex items-center h-16 pointer-events-none transition-all duration-300 ${isScrolled ? 'bg-black/60 backdrop-blur-md border-b border-white/5' : 'bg-transparent'}`}
+      className={`fixed top-0 left-0 right-0 z-[150] px-6 flex items-center pointer-events-none transition-all duration-300 ${isScrolled ? 'bg-black/60 backdrop-blur-md border-b border-white/5' : 'bg-transparent'}`}
+      style={{ 
+        height: 'calc(4rem + env(safe-area-inset-top))',
+        paddingTop: 'env(safe-area-inset-top)'
+      }}
     >
        <div 
          className={`flex items-center gap-2 cursor-pointer pointer-events-auto transition-transform duration-300 ${isScrolled ? 'scale-90' : 'scale-100'}`} 

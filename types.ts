@@ -62,6 +62,8 @@ export interface User {
   traktConnected: boolean;
   traktUsername: string | null;
   watchlist: Movie[];
+  favorites: Movie[]; // Full movie objects for the Favorites tab
+  watchedHistory: Movie[]; // Full movie objects for the Watched tab
   watched: string[]; 
   watchedEpisodes: string[]; 
   userRatings: Record<string, number>;
