@@ -31,7 +31,7 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
 
   return (
     <div className="pb-32 max-w-5xl mx-auto w-full">
-      <section className="mb-12 relative h-[70vh] sm:h-[600px] w-full overflow-hidden bg-slate-950">
+      <section className="mb-12 relative h-[75vh] sm:h-[600px] w-full overflow-hidden bg-slate-950">
         <AnimatePresence mode="popLayout">
             {loading ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white/20">
@@ -51,7 +51,7 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-100 opacity-60" 
                     style={{ backgroundImage: `url('${featured.poster}')`, transform: 'scale(1.05)' }} 
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
                 <div className="absolute inset-0 flex flex-col justify-end p-8 pb-12 z-10 max-w-2xl">
                     <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
                         <span className="inline-block bg-[#6B46C1] text-white text-[9px] font-black px-3 py-1 rounded-md uppercase tracking-widest mb-4 shadow-lg shadow-purple-900/50">Top Pick</span>
@@ -113,7 +113,6 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
     try { const data = await API.searchMovies(q, f, user.isKidsMode); setResults(data || []); } finally { setSearching(false); }
   };
   
-  // Animation Variants
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -132,9 +131,12 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
   };
 
   return (
-    <div className="pt-24 px-6 pb-32 max-w-5xl mx-auto w-full">
+    <div 
+      className="px-6 pb-32 max-w-5xl mx-auto w-full"
+      style={{ paddingTop: 'calc(6rem + env(safe-area-inset-top))' }}
+    >
         <div className="relative mb-8">
-            <input type="text" placeholder="Search titles, vibes, genres..." value={query} onChange={(e) => setQuery(e.target.value)} className="w-full bg-[#1A1A1A] border border-white/10 rounded-2xl pl-12 pr-12 py-4 outline-none font-bold text-sm text-white focus:border-[#6B46C1] transition-colors placeholder:text-gray-600" />
+            <input type="text" placeholder="Search titles, vibes, genres..." value={query} onChange={(e) => setQuery(e.target.value)} className="w-full bg-[#1A1A1A] border border-white/10 rounded-2xl pl-12 pr-12 py-4 outline-none font-bold text-sm text-white focus:border-[#6B46C1] transition-colors placeholder:text-gray-600 shadow-xl" />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             {searching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-[#6B46C1]" size={20} />}
         </div>
@@ -163,7 +165,7 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
         
         {results.length > 0 && (
             <motion.div 
-              key={query + filter} // Triggers animation on new search
+              key={query + filter} 
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -182,14 +184,15 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
 
 export const LibraryPage = memo(({ user, onSelectMovie }: any) => {
   const [tab, setTab] = useState<'watchlist' | 'watched' | 'favorites'>('watchlist');
-  
-  // Use dedicated arrays for each tab to ensure all faves/watched appear even if not on watchlist
   const items = tab === 'watchlist' 
     ? (user.watchlist || []) 
     : (tab === 'watched' ? (user.watchedHistory || []) : (user.favorites || []));
   
   return (
-    <div className="pt-24 px-6 pb-32 max-w-5xl mx-auto w-full">
+    <div 
+      className="px-6 pb-32 max-w-5xl mx-auto w-full"
+      style={{ paddingTop: 'calc(6rem + env(safe-area-inset-top))' }}
+    >
         <div className="grid grid-cols-2 gap-3 mb-8">
             {[{ label: 'WATCHED', value: user.watched.length, icon: Eye, color: '#6B46C1' }, { label: 'PLANNING', value: user.watchlist.length, icon: Bookmark, color: '#F6AD55' }].map(s => (
                 <div key={s.label} className="p-5 bg-[#1A1A1A] rounded-2xl border border-white/5 flex flex-col justify-between h-24">
@@ -223,7 +226,10 @@ export const LibraryPage = memo(({ user, onSelectMovie }: any) => {
 
 export const ProfilePage = memo(({ user, setUser, theme, setTheme }: any) => {
   return (
-    <div className="pt-28 px-6 pb-32 max-w-xl mx-auto w-full">
+    <div 
+      className="px-6 pb-32 max-w-xl mx-auto w-full"
+      style={{ paddingTop: 'calc(7rem + env(safe-area-inset-top))' }}
+    >
         <div className="flex flex-col items-center mb-10 text-center">
             <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#6B46C1] to-[#44337A] flex items-center justify-center shadow-2xl mb-4 text-white border-2 border-white/5">
                 <UserCircle size={40} />
