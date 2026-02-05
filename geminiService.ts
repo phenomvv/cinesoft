@@ -2,8 +2,22 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Movie, Person, Season } from "./types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// --- Initialization Logic ---
+const apiKey = process.env.API_KEY;
+let ai: GoogleGenAI | null = null;
 
+// Only attempt to initialize if a key is present to prevent immediate crash
+if (apiKey && apiKey.length > 0) {
+  try {
+    ai = new GoogleGenAI({ apiKey });
+  } catch (error) {
+    console.warn("Gemini Client failed to initialize. App will run in Demo Mode.", error);
+  }
+} else {
+  console.warn("Gemini API Key is missing. App is running in Demo Mode.");
+}
+
+// --- Schema ---
 const movieSchema = {
   type: Type.OBJECT,
   properties: {
@@ -35,7 +49,42 @@ const movieSchema = {
   required: ['id', 'title', 'year', 'rating', 'type', 'poster', 'description', 'genres', 'director', 'cast', 'streamingPlatforms']
 };
 
+// --- Demo Data Fallback ---
+const DEMO_MOVIES: Movie[] = [
+  {
+    id: 'demo-1',
+    title: 'Welcome to CineSoft',
+    year: '2025',
+    rating: 10,
+    type: 'movie',
+    poster: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=800&auto=format&fit=crop',
+    backdrop: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1200&auto=format&fit=crop',
+    description: 'This is a demo placeholder because the API Key is missing. Please add your Gemini API_KEY to Vercel Environment Variables to unlock AI features.',
+    genres: ['Demo', 'System'],
+    director: 'CineSoft',
+    cast: ['You', 'AI'],
+    streamingPlatforms: [],
+    trailerUrl: ''
+  },
+  {
+    id: 'demo-2',
+    title: 'Setup Required',
+    year: '2024',
+    rating: 9.5,
+    type: 'show',
+    poster: 'https://images.unsplash.com/photo-1616530940355-351fabd9524b?q=80&w=800&auto=format&fit=crop',
+    backdrop: 'https://images.unsplash.com/photo-1518676590629-3dcbd9c5a5c9?q=80&w=1200&auto=format&fit=crop',
+    description: 'To see real movies and shows, configure your backend API keys.',
+    genres: ['Tutorial'],
+    director: 'Admin',
+    cast: [],
+    streamingPlatforms: [],
+    trailerUrl: ''
+  }
+];
+
 export const getAIOpinion = async (title: string) => {
+  if (!ai) return "AI Insights unavailable (Demo Mode).";
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -49,6 +98,7 @@ export const getAIOpinion = async (title: string) => {
 };
 
 export const getTasteInsights = async (watchedTitles: string[], watchlistTitles: string[]) => {
+  if (!ai) return "Add an API Key to see your personalized taste profile!";
   try {
     const prompt = `Based on these watched titles: [${watchedTitles.join(', ')}] and these watchlist items: [${watchlistTitles.join(', ')}], provide a fun, personalized 3-sentence analysis of the user's movie taste. Be witty and descriptive.`;
     const response = await ai.models.generateContent({
@@ -63,6 +113,8 @@ export const getTasteInsights = async (watchedTitles: string[], watchlistTitles:
 };
 
 const fetchList = async (prompt: string, kidsMode: boolean = false): Promise<Movie[]> => {
+  if (!ai) return DEMO_MOVIES;
+  
   try {
     const familyInstruction = kidsMode ? "STRICT PARENTAL CONTROL: Only return movies or shows rated G, PG, or TV-Y/TV-G/TV-PG. Absolutely no R-rated or TV-MA content." : "";
     
@@ -102,11 +154,15 @@ export const fetchRecommendations = (likedTitles: string[], kidsMode: boolean = 
 };
 
 export const searchMovies = (query: string, typeFilter: string = 'all', kidsMode: boolean = false) => {
+  if (!ai) {
+    return Promise.resolve(DEMO_MOVIES.filter(m => m.title.toLowerCase().includes(query.toLowerCase())));
+  }
   let constraint = typeFilter === 'all' ? "movies or shows" : typeFilter;
   return fetchList(`Search for "${query}" ${constraint}. Return 10 results in JSON with accurate poster URLs.`, kidsMode);
 };
 
 export const fetchMovieDetails = async (id: string, type: 'movie' | 'show'): Promise<Movie | null> => {
+  if (!ai) return DEMO_MOVIES[0];
   try {
       const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
@@ -125,6 +181,7 @@ export const fetchMovieDetails = async (id: string, type: 'movie' | 'show'): Pro
 };
 
 export const fetchPersonDetails = async (name: string): Promise<Person | null> => {
+  if (!ai) return null;
   try {
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
