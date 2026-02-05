@@ -3,34 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- Immersive Mode Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CineSoft">
     <meta name="theme-color" content="#050505">
+    <meta name="mobile-web-app-capable" content="yes">
+
     <title>CineSoft - Movie Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        *::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; }
-        
-        html, body {
+        /* 1. HTML/Body Grounding */
+        html {
+            background-color: #050505; /* Matches App background exactly */
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        body {
+            background-color: #050505;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
             font-family: 'Quicksand', sans-serif;
             -webkit-tap-highlight-color: transparent;
             overflow-x: hidden;
-            width: 100%;
-            height: 100%;
-            position: fixed;
-            background-color: #050505;
+            overflow-y: hidden; /* Lock body, scroll #root */
+            position: fixed; /* Prevents "pull-to-refresh" bounce showing white space */
             touch-action: manipulation;
         }
 
+        *::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; }
+        
         #root {
             width: 100%;
             height: 100%;
             overflow-y: auto;
             overflow-x: hidden;
             -webkit-overflow-scrolling: touch;
-            /* Padding removed to allow immersive bleed */
+            background-color: #050505;
+        }
+
+        /* 2. Fix for potential notch-related phantom spacing */
+        :root {
+            --sat: env(safe-area-inset-top);
+            --sab: env(safe-area-inset-bottom);
         }
     </style>
 <script type="importmap">

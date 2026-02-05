@@ -65,15 +65,13 @@ export const GlobalHeader = memo(({ user }: { user: User }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    const root = document.getElementById('root');
     const handleScroll = () => {
-      // Since #root is the scrollable container now
-      const root = document.getElementById('root');
       if (root) {
         setIsScrolled(root.scrollTop > 20);
       }
     };
     
-    const root = document.getElementById('root');
     if (root) {
       root.addEventListener("scroll", handleScroll, { passive: true });
     }
@@ -84,10 +82,13 @@ export const GlobalHeader = memo(({ user }: { user: User }) => {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-[150] px-6 flex items-center pointer-events-none transition-all duration-300 ${isScrolled ? 'bg-black/60 backdrop-blur-md border-b border-white/5' : 'bg-transparent'}`}
+      // Ensure top: 0 and absolute/fixed positioning
+      className={`fixed top-0 left-0 right-0 z-[150] px-6 flex items-center pointer-events-none transition-all duration-300 ${isScrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/5' : 'bg-transparent'}`}
       style={{ 
+        // Height covers header content + notch safe area
         height: 'calc(4rem + env(safe-area-inset-top))',
-        paddingTop: 'env(safe-area-inset-top)'
+        paddingTop: 'env(safe-area-inset-top)',
+        marginTop: 0 // Explicitly zero out margin
       }}
     >
        <div 
