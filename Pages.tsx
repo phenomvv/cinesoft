@@ -131,10 +131,7 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
   };
 
   return (
-    <div 
-      className="px-6 pb-32 max-w-5xl mx-auto w-full"
-      style={{ paddingTop: 'calc(6rem + env(safe-area-inset-top))' }}
-    >
+    <div className="pt-24 px-6 pb-32 max-w-5xl mx-auto w-full">
         <div className="relative mb-8">
             <input type="text" placeholder="Search titles, vibes, genres..." value={query} onChange={(e) => setQuery(e.target.value)} className="w-full bg-[#1A1A1A] border border-white/10 rounded-2xl pl-12 pr-12 py-4 outline-none font-bold text-sm text-white focus:border-[#6B46C1] transition-colors placeholder:text-gray-600 shadow-xl" />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
@@ -189,10 +186,7 @@ export const LibraryPage = memo(({ user, onSelectMovie }: any) => {
     : (tab === 'watched' ? (user.watchedHistory || []) : (user.favorites || []));
   
   return (
-    <div 
-      className="px-6 pb-32 max-w-5xl mx-auto w-full"
-      style={{ paddingTop: 'calc(6rem + env(safe-area-inset-top))' }}
-    >
+    <div className="pt-24 px-6 pb-32 max-w-5xl mx-auto w-full">
         <div className="grid grid-cols-2 gap-3 mb-8">
             {[{ label: 'WATCHED', value: user.watched.length, icon: Eye, color: '#6B46C1' }, { label: 'PLANNING', value: user.watchlist.length, icon: Bookmark, color: '#F6AD55' }].map(s => (
                 <div key={s.label} className="p-5 bg-[#1A1A1A] rounded-2xl border border-white/5 flex flex-col justify-between h-24">
@@ -226,10 +220,7 @@ export const LibraryPage = memo(({ user, onSelectMovie }: any) => {
 
 export const ProfilePage = memo(({ user, setUser, theme, setTheme }: any) => {
   return (
-    <div 
-      className="px-6 pb-32 max-w-xl mx-auto w-full"
-      style={{ paddingTop: 'calc(7rem + env(safe-area-inset-top))' }}
-    >
+    <div className="pt-24 px-6 pb-32 max-w-xl mx-auto w-full">
         <div className="flex flex-col items-center mb-10 text-center">
             <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#6B46C1] to-[#44337A] flex items-center justify-center shadow-2xl mb-4 text-white border-2 border-white/5">
                 <UserCircle size={40} />

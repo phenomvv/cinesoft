@@ -1,5 +1,5 @@
 import React, { useState, useEffect, memo } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Clapperboard, Star, Check, Bookmark, Home, Search, Library as LibraryIcon, User as UserIcon, Sparkles 
@@ -65,34 +65,23 @@ export const GlobalHeader = memo(({ user }: { user: User }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    const root = document.getElementById('root');
     const handleScroll = () => {
-      if (root) {
-        setIsScrolled(root.scrollTop > 20);
-      }
+      setIsScrolled(window.scrollY > 20);
     };
-    
-    if (root) {
-      root.addEventListener("scroll", handleScroll, { passive: true });
-    }
-    return () => {
-      if (root) root.removeEventListener("scroll", handleScroll);
-    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <header 
-      // Ensure top: 0 and absolute/fixed positioning
-      className={`fixed top-0 left-0 right-0 z-[150] px-6 flex items-center pointer-events-none transition-all duration-300 ${isScrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/5' : 'bg-transparent'}`}
-      style={{ 
-        // Height covers header content + notch safe area
-        height: 'calc(4rem + env(safe-area-inset-top))',
+      className={`fixed top-0 left-0 right-0 z-[150] px-6 flex items-center transition-all duration-300 ${isScrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/5 shadow-2xl' : 'bg-transparent'}`}
+      style={{
         paddingTop: 'env(safe-area-inset-top)',
-        marginTop: 0 // Explicitly zero out margin
+        height: 'calc(5rem + env(safe-area-inset-top))'
       }}
     >
        <div 
-         className={`flex items-center gap-2 cursor-pointer pointer-events-auto transition-transform duration-300 ${isScrolled ? 'scale-90' : 'scale-100'}`} 
+         className={`flex items-center gap-2 cursor-pointer transition-transform duration-300 ${isScrolled ? 'scale-90' : 'scale-100'}`} 
          onClick={() => navigate('/')}
        >
           <div className={`p-2 bg-[#6B46C1] rounded-lg shadow-lg shadow-purple-900/30`}>
@@ -179,7 +168,10 @@ export const BottomNav = memo(() => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[200] px-6 pb-6 flex justify-center pointer-events-none">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-[200] px-6 flex justify-center pointer-events-none"
+      style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+    >
       <div className="bg-[#0A0A0A]/90 backdrop-blur-2xl rounded-full flex items-center justify-between p-1 shadow-[0_10px_40px_rgba(0,0,0,0.6)] border border-white/10 pointer-events-auto max-w-[320px] w-full">
         {tabs.map(tab => {
           const active = location.pathname === tab.path;

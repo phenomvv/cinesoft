@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, memo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
-  X, Star, Play, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon 
+  X, Star, Play, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon, MonitorPlay 
 } from 'lucide-react';
-import { Movie, Episode, Person, Season } from './types';
+import { Movie, Episode, Person, Season, StreamingPlatform } from './types';
 import * as GeminiAPI from './geminiService';
 import * as TmdbAPI from './tmdbService';
 import { FALLBACK_POSTER, getCommunityRating, MovieCard } from './SharedUI';
@@ -213,6 +214,33 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
 
               <p className="text-sm font-medium leading-relaxed text-gray-300">{movie.description}</p>
 
+              {/* Where to Watch Section */}
+              {movie.streamingPlatforms && movie.streamingPlatforms.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-[9px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+                    <MonitorPlay size={10} /> WHERE TO WATCH
+                  </h4>
+                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6 no-scrollbar">
+                    {movie.streamingPlatforms.map((platform: StreamingPlatform, i: number) => (
+                      <div 
+                        key={i} 
+                        className="flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-lg border border-white/10 bg-gray-900 group relative transition-transform active:scale-95"
+                        title={platform.name}
+                      >
+                        {platform.url ? (
+                          <img src={platform.url} alt={platform.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[8px] font-black text-white text-center p-1 bg-gradient-to-br from-gray-700 to-gray-900">
+                            {platform.name}
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-4">
                 <h4 className="text-[9px] font-black uppercase tracking-widest text-white/40">CAST & CREW</h4>
                 <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar">
@@ -289,7 +317,7 @@ export const PersonModal = memo(({ name, onClose, onSelectMovie }: any) => {
 
   return (
     <motion.div initial="initial" animate="animate" exit="exit" variants={modalOverlay} className="fixed inset-0 z-[450] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-hidden">
-      <motion.div variants={modalContent} className="bg-[#0F0F0F] w-full max-w-xl max-h-[85vh] rounded-[2rem] overflow-hidden flex flex-col relative border border-white/10 shadow-2xl">
+      <motion.div variants={modalContent} className="bg-[#0F0F0F] w-full max-xl max-h-[85vh] rounded-[2rem] overflow-hidden flex flex-col relative border border-white/10 shadow-2xl">
         <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center z-[460] text-white active:scale-90 transition-transform hover:bg-white/20"><X size={20} /></button>
         {loading ? <div className="flex-1 flex items-center justify-center min-h-[300px]"><Loader2 className="animate-spin text-[#6B46C1]" size={32} /></div> : person && (
           <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
