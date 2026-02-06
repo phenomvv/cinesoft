@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -35,7 +36,6 @@ const PersonModal = lazy(() => import('./Modals').then(m => ({ default: m.Person
 const VideoModal = lazy(() => import('./Modals').then(m => ({ default: m.VideoModal })));
 
 const App = () => {
-  // Robust initialization: Merges saved data with DEFAULT_USER to ensure new schema fields exist
   const [user, setUser] = useState<User>(() => { 
     try {
       const saved = localStorage.getItem('cinesoft_user'); 
@@ -49,7 +49,6 @@ const App = () => {
   const [activeTrailerUrl, setActiveTrailerUrl] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   
-  // Data State
   const [trendingMovies, setTrendingMovies] = useState<Movie[]>([]);
   const [trendingShows, setTrendingShows] = useState<Movie[]>([]);
   const [recommendations, setRecommendations] = useState<Movie[]>([]);
@@ -58,6 +57,25 @@ const App = () => {
   const isModalOpen = !!(selectedMovie || selectedPerson || activeTrailerUrl);
 
   const showToast = (message: string) => setToast(message);
+
+  const handlePlayTrailer = async (movie: Movie) => {
+    if (movie.trailerUrl) {
+      setActiveTrailerUrl(movie.trailerUrl);
+      return;
+    }
+    
+    // If no trailer URL, fetch full details to get it
+    try {
+      const details = await API.fetchMovieDetails(movie.id, movie.type);
+      if (details?.trailerUrl) {
+        setActiveTrailerUrl(details.trailerUrl);
+      } else {
+        showToast("Trailer not available for this title");
+      }
+    } catch (err) {
+      showToast("Error loading trailer");
+    }
+  };
 
   useEffect(() => { 
     document.documentElement.classList.toggle('dark', theme === 'dark'); 
@@ -132,7 +150,7 @@ const App = () => {
           <GlobalHeader user={user} />
           <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[#6B46C1]" /></div>}>
             <Routes>
-              <Route path="/" element={<HomePage trendingM={trendingMovies} trendingS={trendingShows} recommendations={recommendations} loading={loading} user={user} onSelectMovie={setSelectedMovie} onPlayTrailer={setActiveTrailerUrl} />} />
+              <Route path="/" element={<HomePage trendingM={trendingMovies} trendingS={trendingShows} recommendations={recommendations} loading={loading} user={user} onSelectMovie={setSelectedMovie} onPlayTrailer={handlePlayTrailer} />} />
               <Route path="/search" element={<ExplorePage onSelectMovie={setSelectedMovie} user={user} />} />
               <Route path="/library" element={<LibraryPage user={user} onSelectMovie={setSelectedMovie} />} />
               <Route path="/profile" element={<ProfilePage user={user} setUser={setUser} theme={theme} setTheme={setTheme} />} />
@@ -158,7 +176,7 @@ const App = () => {
                 onToggleWatched={onToggleWatched} 
                 onToggleFavorite={onToggleFavorite}
                 onSelectPerson={setSelectedPerson} 
-                onPlayTrailer={setActiveTrailerUrl}
+                onPlayTrailer={handlePlayTrailer}
                 onShowToast={showToast} 
               />
             )}
