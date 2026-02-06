@@ -182,10 +182,11 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
           {selectedEpisode && <EpisodeDetailModal episode={selectedEpisode} seasonNumber={activeSeason} showTitle={movie.title} onClose={() => setSelectedEpisode(null)} isWatched={watchedEpisodes.includes(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} onToggleWatch={() => toggleEpisode(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} />}
         </AnimatePresence>
         
-        <div className="absolute top-0 left-0 right-0 h-[50vh] z-0 pointer-events-none">
+        <div className="absolute top-0 left-0 right-0 h-[55vh] z-0 pointer-events-none">
            <div className="absolute inset-0 bg-cover bg-top" style={{ backgroundImage: `url(${bgImage})` }} />
-           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
-           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent h-32" />
+           <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/60 to-transparent" />
+           {/* Top bleed for safe area legibility */}
+           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent h-40" />
         </div>
         
         <button 
@@ -197,7 +198,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
         </button>
         
         <div className="flex-1 overflow-y-auto relative z-10 no-scrollbar">
-           <div className="pt-[40vh] px-6 pb-32 space-y-8">
+           <div className="pt-[45vh] px-6 pb-32 space-y-8">
              <div className="flex gap-6 items-end">
                <div className="relative w-32 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/10 bg-gray-900">
                  <img src={movie.poster || FALLBACK_POSTER} className="w-full h-full object-cover" alt={movie.title} />
