@@ -62,29 +62,21 @@ export const Button = memo(({ children, onClick, className = "", variant = "prim
 
 export const GlobalHeader = memo(({ user }: { user: User }) => {
   const navigate = useNavigate();
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-[150] px-6 flex items-center transition-all duration-300 ${isScrolled ? 'bg-gradient-to-b from-[#050505]/90 to-transparent backdrop-blur-[2px]' : 'bg-gradient-to-b from-[#050505]/60 to-transparent'}`}
-      style={{
+      className="fixed top-0 left-0 right-0 z-[150] px-6 flex items-center bg-transparent"
+      style={{ 
         paddingTop: 'env(safe-area-inset-top)',
-        height: 'calc(5rem + env(safe-area-inset-top))'
+        height: 'calc(5rem + env(safe-area-inset-top))',
+        pointerEvents: 'none'
       }}
     >
        <div 
-         className={`flex items-center gap-2 cursor-pointer transition-transform duration-300 ${isScrolled ? 'scale-90' : 'scale-100'}`} 
+         className="flex items-center gap-2 cursor-pointer pointer-events-auto" 
          onClick={() => navigate('/')}
        >
-          <div className={`p-2 bg-[#6B46C1] rounded-lg shadow-lg shadow-purple-900/30`}>
+          <div className="p-2 bg-[#6B46C1] rounded-lg shadow-lg shadow-purple-900/30">
             <Clapperboard size={16} className="text-white" />
           </div>
           <div className="flex flex-col">

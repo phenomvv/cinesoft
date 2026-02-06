@@ -31,7 +31,7 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
 
   return (
     <div className="pb-32 max-w-5xl mx-auto w-full">
-      <section className="mb-12 relative h-[75vh] sm:h-[600px] w-full overflow-hidden bg-slate-950">
+      <section className="mb-12 relative h-[80vh] sm:h-[600px] w-full overflow-hidden bg-[#050505]">
         <AnimatePresence mode="popLayout">
             {loading ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white/20">
@@ -48,10 +48,12 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
                 className="absolute inset-0"
               >
                 <div 
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-100 opacity-60" 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-100" 
                     style={{ backgroundImage: `url('${featured.poster}')`, transform: 'scale(1.05)' }} 
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/20 to-transparent" />
+                {/* Simplified gradient overlays: only bottom-up to clear text */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
+                
                 <div className="absolute inset-0 flex flex-col justify-end p-8 pb-12 z-10 max-w-2xl">
                     <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
                         <span className="inline-block bg-[#6B46C1] text-white text-[9px] font-black px-3 py-1 rounded-md uppercase tracking-widest mb-4 shadow-lg shadow-purple-900/50">Top Pick</span>
