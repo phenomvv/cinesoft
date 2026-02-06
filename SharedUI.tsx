@@ -74,7 +74,7 @@ export const GlobalHeader = memo(({ user }: { user: User }) => {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 z-[150] px-6 flex items-center transition-all duration-300 ${isScrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/5 shadow-2xl' : 'bg-transparent'}`}
+      className={`fixed top-0 left-0 right-0 z-[150] px-6 flex items-center transition-all duration-300 ${isScrolled ? 'bg-gradient-to-b from-[#050505]/90 to-transparent backdrop-blur-[2px]' : 'bg-gradient-to-b from-[#050505]/60 to-transparent'}`}
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         height: 'calc(5rem + env(safe-area-inset-top))'
