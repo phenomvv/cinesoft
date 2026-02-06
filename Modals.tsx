@@ -173,7 +173,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
   const displayGenre = movie.genres && movie.genres.length > 0 ? movie.genres[0] : movie.type === 'movie' ? 'MOVIE' : 'TV SHOW';
 
   return (
-    <motion.div initial="initial" animate="animate" exit="exit" variants={modalOverlay} className="fixed inset-0 z-[400] bg-black/80 backdrop-blur-md flex items-center justify-center overflow-hidden">
+    <motion.div initial="initial" animate="animate" exit="exit" variants={modalOverlay} className="fixed inset-0 z-[400] bg-black/80 backdrop-blur-md flex items-start justify-center overflow-hidden">
       <motion.div 
         variants={modalContent} 
         className="bg-[#050505] w-full max-w-2xl h-[100dvh] sm:h-[95vh] sm:rounded-[2rem] rounded-none overflow-hidden flex flex-col relative shadow-2xl"
@@ -185,7 +185,6 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
         <div className="absolute top-0 left-0 right-0 h-[50vh] z-0 pointer-events-none">
            <div className="absolute inset-0 bg-cover bg-top" style={{ backgroundImage: `url(${bgImage})` }} />
            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
-           {/* Top bleed for safe area */}
            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent h-32" />
         </div>
         
@@ -331,7 +330,7 @@ export const PersonModal = memo(({ name, onClose, onSelectMovie }: any) => {
   const isLongBio = person?.bio && person.bio.length > 250;
 
   return (
-    <motion.div initial="initial" animate="animate" exit="exit" variants={modalOverlay} className="fixed inset-0 z-[450] bg-black/85 backdrop-blur-md flex items-center justify-center overflow-hidden">
+    <motion.div initial="initial" animate="animate" exit="exit" variants={modalOverlay} className="fixed inset-0 z-[450] bg-black/85 backdrop-blur-md flex items-start justify-center overflow-hidden">
       <motion.div 
         variants={modalContent} 
         className="bg-[#050505] w-full max-w-xl h-[100dvh] sm:h-[85vh] sm:rounded-[2rem] rounded-none overflow-hidden flex flex-col relative border-t border-white/10 sm:border border-white/5 shadow-2xl"
