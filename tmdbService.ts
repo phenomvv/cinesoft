@@ -1,10 +1,10 @@
-
 import { Movie, Person, Season, Episode, StreamingPlatform } from "./types";
 
 const API_KEY = process.env.TMDB_API_KEY || '717d9fe49eec21ec222a75e01c58e79c'; 
 
 const BASE_URL = 'https://api.themoviedb.org/3';
-const IMAGE_BASE = 'https://image.tmdb.org/t/p/w780';
+const IMAGE_POSTER = 'https://image.tmdb.org/t/p/w780';
+const IMAGE_BACKDROP = 'https://image.tmdb.org/t/p/original';
 const PROFILE_BASE = 'https://image.tmdb.org/t/p/w185';
 
 const GENRE_MAP: Record<string, number> = {
@@ -29,8 +29,8 @@ const mapMovie = (m: any): Movie => ({
   year: (m.release_date || m.first_air_date || '').split('-')[0] || 'N/A',
   rating: Number(m.vote_average?.toFixed(1)) || 0,
   type: m.media_type === 'tv' || m.name ? 'show' : 'movie',
-  poster: m.poster_path ? `${IMAGE_BASE}${m.poster_path}` : '',
-  backdrop: m.backdrop_path ? `${IMAGE_BASE}${m.backdrop_path}` : undefined,
+  poster: m.poster_path ? `${IMAGE_POSTER}${m.poster_path}` : '',
+  backdrop: m.backdrop_path ? `${IMAGE_BACKDROP}${m.backdrop_path}` : undefined,
   description: m.overview,
   genres: [], 
   director: 'Loading...', 
@@ -159,7 +159,7 @@ export const fetchSeasons = async (id: string): Promise<Season[]> => {
           number: e.episode_number, 
           title: e.name, 
           overview: e.overview, 
-          thumbnail: e.still_path ? `${IMAGE_BASE}${e.still_path}` : '',
+          thumbnail: e.still_path ? `${IMAGE_POSTER}${e.still_path}` : '',
           runtime: e.runtime ? `${e.runtime} min` : undefined
         })) || []
       });

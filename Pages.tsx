@@ -31,8 +31,8 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
 
   return (
     <div className="pb-32 w-full">
-      {/* Hero Section: Truly Edge-to-Edge */}
-      <section className="relative h-[85vh] sm:h-[700px] w-full overflow-hidden bg-[#050505]">
+      {/* Hero Section: Absolute edge-to-edge covering the notch */}
+      <section className="relative h-[100dvh] sm:h-[800px] w-full overflow-hidden bg-[#050505]">
         <AnimatePresence mode="popLayout">
             {loading ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white/20">
@@ -49,25 +49,24 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
                 className="absolute inset-0"
               >
                 <div 
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] ease-linear scale-100" 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-[15000ms] ease-linear scale-100" 
                     style={{ 
                       backgroundImage: `url('${featured.backdrop || featured.poster}')`, 
-                      transform: 'scale(1.05)',
-                      backgroundPosition: 'center 20%'
+                      transform: 'scale(1.1)',
+                      backgroundPosition: 'center center'
                     }} 
                 />
                 
-                {/* Simplified gradient overlays: Bottom-up for legibility */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
+                {/* Single bottom gradient to clear text only */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
                 
-                {/* Content area: respects safe-area-inset for mobile */}
-                <div className="absolute inset-0 flex flex-col justify-end p-8 pb-12 z-10 max-w-5xl mx-auto w-full">
+                <div className="absolute inset-0 flex flex-col justify-end p-8 pb-16 z-10 max-w-5xl mx-auto w-full">
                     <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
                         <span className="inline-block bg-[#6B46C1] text-white text-[9px] font-black px-3 py-1 rounded-md uppercase tracking-widest mb-4 shadow-lg shadow-purple-900/50">Top Pick</span>
-                        <h2 className="text-4xl sm:text-6xl font-black text-white mb-6 leading-tight tracking-tighter drop-shadow-lg line-clamp-2 max-w-2xl">{featured.title}</h2>
+                        <h2 className="text-4xl sm:text-6xl font-black text-white mb-6 leading-tight tracking-tighter drop-shadow-xl line-clamp-2 max-w-2xl">{featured.title}</h2>
                         <div className="flex items-center gap-3">
-                            <button onClick={() => onSelectMovie(featured)} className="px-8 py-3.5 bg-white text-black font-black rounded-xl active:scale-95 transition-transform text-xs uppercase tracking-widest shadow-xl hover:bg-gray-100">Details</button>
-                            <button onClick={() => featured.trailerUrl && onPlayTrailer(featured.trailerUrl)} className="w-12 h-12 rounded-xl bg-[#6B46C1] flex items-center justify-center text-white shadow-xl shadow-purple-900/30 active:scale-90 transition-transform hover:bg-[#553C9A]"><Play size={20} fill="currentColor" /></button>
+                            <button onClick={() => onSelectMovie(featured)} className="px-8 py-4 bg-white text-black font-black rounded-xl active:scale-95 transition-transform text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100">Details</button>
+                            <button onClick={() => featured.trailerUrl && onPlayTrailer(featured.trailerUrl)} className="w-14 h-14 rounded-xl bg-[#6B46C1] flex items-center justify-center text-white shadow-2xl shadow-purple-900/30 active:scale-90 transition-transform hover:bg-[#553C9A]"><Play size={24} fill="currentColor" /></button>
                         </div>
                     </motion.div>
                 </div>
