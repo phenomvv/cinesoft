@@ -9,10 +9,23 @@ import { Movie, User } from './types';
 
 export const getCommunityRating = (movieId: string, baseRating: number) => {
   try {
+    const savedUser = localStorage.getItem('cinesoft_user');
+    const user = savedUser ? JSON.parse(savedUser) : null;
+    const userRating = user?.userRatings?.[movieId];
+
     const allRatingsData = localStorage.getItem('cinesoft_global_ratings');
     const db = allRatingsData ? JSON.parse(allRatingsData) : {};
     const entry = db[movieId] || { sum: baseRating * 100, count: 100 };
-    return (entry.sum / entry.count).toFixed(1);
+    
+    let finalSum = entry.sum;
+    let finalCount = entry.count;
+    
+    if (userRating) {
+      finalSum += userRating * 2;
+      finalCount += 1;
+    }
+
+    return (finalSum / finalCount).toFixed(1);
   } catch (e) {
     return baseRating.toFixed(1);
   }
@@ -31,35 +44,15 @@ export const Toast = ({ message, onClose }: { message: string; onClose: () => vo
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.9 }}
-      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[3000] bg-[#1A1A1A] border border-white/10 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold text-xs tracking-wide backdrop-blur-md"
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[3000] bg-black/80 border border-white/10 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 font-bold text-xs tracking-wide backdrop-blur-xl"
     >
-      <div className="bg-[#6B46C1] p-1 rounded-full text-white shadow-lg shadow-purple-900/50">
+      <div className="bg-[#6B46C1] p-1 rounded-full text-white">
         <Check size={12} strokeWidth={3} />
       </div>
       {message}
     </motion.div>
   );
 };
-
-export const Button = memo(({ children, onClick, className = "", variant = "primary", disabled = false }: any) => {
-  const base = "px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 text-xs transition-transform duration-100 active:scale-95";
-  const variants: any = {
-    primary: "bg-[#6B46C1]/10 text-[#6B46C1]",
-    secondary: "bg-[#2D353E] text-[#F0FFF4]",
-    accent: "bg-[#3E2D2D] text-[#FFF5F5]",
-    dark: "bg-black/80 text-white border border-white/10",
-    pro: "bg-gradient-to-r from-[#6B46C1] to-[#805AD5] text-white shadow-lg shadow-purple-500/20"
-  };
-  return (
-    <button 
-      onClick={onClick} 
-      className={`${base} ${variants[variant]} ${className}`} 
-      disabled={disabled}
-    >
-      {children}
-    </button>
-  );
-});
 
 export const GlobalHeader = memo(({ user }: { user: User }) => {
   const navigate = useNavigate();
@@ -69,7 +62,7 @@ export const GlobalHeader = memo(({ user }: { user: User }) => {
       className="fixed top-0 left-0 right-0 z-[150] px-6 flex items-center bg-transparent"
       style={{ 
         paddingTop: 'env(safe-area-inset-top)',
-        height: 'calc(5rem + env(safe-area-inset-top))',
+        height: 'calc(4rem + env(safe-area-inset-top))',
         pointerEvents: 'none'
       }}
     >
@@ -77,14 +70,12 @@ export const GlobalHeader = memo(({ user }: { user: User }) => {
          className="flex items-center gap-2 cursor-pointer pointer-events-auto" 
          onClick={() => navigate('/')}
        >
-          <div className="p-2 bg-[#6B46C1] rounded-lg shadow-lg shadow-purple-900/30">
-            <Clapperboard size={16} className="text-white" />
+          <div className="p-2 bg-[#6B46C1] rounded-xl shadow-lg shadow-purple-900/40">
+            <Clapperboard size={18} className="text-white" />
           </div>
-          <div className="flex flex-col">
-            <h1 className="text-xl font-black tracking-tighter leading-none text-white drop-shadow-md">
-              Cine<span className="text-transparent bg-clip-text bg-gradient-to-r from-[#6B46C1] to-[#9F7AEA]">Soft</span>
-            </h1>
-          </div>
+          <h1 className="text-2xl font-black tracking-tighter text-white">
+            Cine<span className="text-[#6B46C1]">Soft</span>
+          </h1>
         </div>
     </header>
   );
@@ -108,44 +99,45 @@ export const MovieCard = memo(({
   return (
     <div 
       onClick={onClick} 
-      className={`${fullWidth ? 'w-full' : 'flex-shrink-0 w-32 sm:w-36'} cursor-pointer group relative transform transition-transform duration-300 hover:-translate-y-1 active:scale-95 touch-manipulation`}
+      className={`${fullWidth ? 'w-full' : 'flex-shrink-0 w-[130px] sm:w-40'} cursor-pointer group relative touch-manipulation`}
     >
-      <div className="relative aspect-[2/3] rounded-[1.5rem] overflow-hidden shadow-xl border border-white/5 bg-gray-800 transition-all will-change-transform group-hover:border-[#6B46C1]/50 group-hover:shadow-[#6B46C1]/20">
+      <div className="relative aspect-[3/4.5] rounded-[1.2rem] overflow-hidden shadow-2xl border border-white/5 bg-[#121212] transition-all duration-300 group-active:scale-95">
         <img 
           src={imgSrc} 
           alt={movie.title} 
           loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
           onError={() => setImgSrc(FALLBACK_POSTER)} 
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         
-        <div className="absolute top-2 left-2 flex flex-row gap-1 z-30 pointer-events-none">
+        {/* Overlays matching the screenshot style */}
+        <div className="absolute top-3 left-3 flex gap-1.5 z-20">
           {isWatched && (
-            <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center border border-white/10 shadow-lg"><Check size={12} /></div>
+            <motion.div 
+              initial={{ scale: 0 }} animate={{ scale: 1 }}
+              className="w-5 h-5 rounded-full bg-emerald-500/90 backdrop-blur-sm text-white flex items-center justify-center shadow-lg"
+            >
+              <Check size={12} strokeWidth={4} />
+            </motion.div>
           )}
           {isInWatchlist && (
-            <div className="w-6 h-6 rounded-full bg-white text-[#6B46C1] flex items-center justify-center border border-white/10 shadow-lg"><Bookmark size={10} fill="currentColor" /></div>
+            <div className="w-5 h-5 rounded-full bg-white/90 backdrop-blur-sm text-[#6B46C1] flex items-center justify-center shadow-lg">
+              <Bookmark size={10} fill="currentColor" />
+            </div>
           )}
         </div>
-        <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-[9px] font-black shadow-lg flex items-center gap-1 text-white z-10 border border-white/10 group-hover:bg-[#6B46C1] group-hover:border-[#6B46C1] group-hover:text-white transition-colors">
-          <Star size={8} className="fill-yellow-400 text-yellow-400 group-hover:text-white group-hover:fill-white" /> {getCommunityRating(movie.id, movie.rating)}
+
+        <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded-md text-[9px] font-black text-white z-10 flex items-center gap-1 border border-white/5">
+          <Star size={8} className="fill-yellow-400 text-yellow-400" /> {getCommunityRating(movie.id, movie.rating)}
         </div>
-      </div>
-      <div className="mt-2.5 px-1">
-        <h3 className="text-xs font-bold truncate text-gray-100 group-hover:text-[#6B46C1] transition-colors">{movie.title}</h3>
-        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-1">
-          {movie.year} {movie.type === 'show' && <span className="text-[8px] bg-white/10 px-1 rounded text-white/50">TV</span>}
-        </p>
       </div>
     </div>
   );
 });
 
 export const SkeletonCard = memo(() => (
-  <div className="flex-shrink-0 w-32 sm:w-36 animate-pulse">
-    <div className="aspect-[2/3] rounded-[1.5rem] bg-white/5 mb-2 border border-white/5" />
-    <div className="h-3 bg-white/5 rounded-full w-3/4 mb-1" />
+  <div className="flex-shrink-0 w-[130px] sm:w-40 animate-pulse">
+    <div className="aspect-[3/4.5] rounded-[1.2rem] bg-white/5 border border-white/5" />
   </div>
 ));
 
@@ -154,35 +146,34 @@ export const BottomNav = memo(() => {
   const location = useLocation();
 
   const tabs = [
-    { id: 'home', path: '/', icon: Home, label: 'HOME' },
-    { id: 'search', path: '/search', icon: Search, label: 'EXPLORE' },
-    { id: 'library', path: '/library', icon: LibraryIcon, label: 'LIBRARY' },
-    { id: 'profile', path: '/profile', icon: UserIcon, label: 'PROFILE' }
+    { id: 'home', path: '/', icon: Home },
+    { id: 'search', path: '/search', icon: Search },
+    { id: 'library', path: '/library', icon: LibraryIcon },
+    { id: 'profile', path: '/profile', icon: UserIcon }
   ];
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-[200] px-6 flex justify-center pointer-events-none"
-      style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+      className="fixed bottom-0 left-0 right-0 z-[200] flex justify-center pointer-events-none pb-[calc(1.5rem + env(safe-area-inset-bottom))]"
     >
-      <div className="bg-[#0A0A0A]/90 backdrop-blur-2xl rounded-full flex items-center justify-between p-1 shadow-[0_10px_40px_rgba(0,0,0,0.6)] border border-white/10 pointer-events-auto max-w-[320px] w-full">
+      <div className="bg-[#0D0D0D]/90 backdrop-blur-3xl rounded-full flex items-center justify-between p-1 shadow-2xl border border-white/10 pointer-events-auto w-[280px]">
         {tabs.map(tab => {
           const active = location.pathname === tab.path;
           return (
             <button 
               key={tab.id} 
               onClick={() => navigate(tab.path)} 
-              className={`flex-1 relative flex flex-col items-center gap-0.5 py-3 rounded-full transition-all duration-300 outline-none ${active ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
+              className={`flex-1 relative flex flex-col items-center py-3 rounded-full transition-all duration-300 outline-none ${active ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
             >
               {active && (
                 <motion.div 
                   layoutId="active-tab"
-                  className="absolute inset-0 bg-[#6B46C1] rounded-full z-0 shadow-lg shadow-purple-900/30"
-                  transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+                  className="absolute inset-0 bg-[#6B46C1] rounded-full z-0 shadow-lg shadow-purple-900/40"
+                  transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                 />
               )}
-              <div className="relative z-10 flex flex-col items-center gap-0.5 transform transition-transform active:scale-90">
-                <tab.icon size={18} strokeWidth={active ? 2.5 : 2} />
+              <div className="relative z-10 transition-transform active:scale-75">
+                <tab.icon size={20} strokeWidth={active ? 2.5 : 2} />
               </div>
             </button>
           );

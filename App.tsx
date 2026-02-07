@@ -63,7 +63,6 @@ const App = () => {
       return;
     }
     
-    // If no trailer URL, fetch full details to get it
     try {
       const details = await API.fetchMovieDetails(movie.id, movie.type);
       if (details?.trailerUrl) {
@@ -133,6 +132,13 @@ const App = () => {
     return { ...prev, favoriteMovieIds: updatedIds, favorites: updatedList };
   });
 
+  const onRateMovie = (movieId: string, rating: number) => {
+    setUser(prev => ({
+      ...prev,
+      userRatings: { ...prev.userRatings, [movieId]: rating }
+    }));
+  };
+
   return (
     <div className="min-h-screen font-sans bg-[#050505] text-[#F5F5F5]">
       <HashRouter>
@@ -169,6 +175,7 @@ const App = () => {
                 onToggleWatchlist={onToggleWatchlist} 
                 onToggleWatched={onToggleWatched} 
                 onToggleFavorite={onToggleFavorite}
+                onRateMovie={onRateMovie}
                 onSelectPerson={setSelectedPerson} 
                 onPlayTrailer={handlePlayTrailer}
                 onShowToast={showToast} 

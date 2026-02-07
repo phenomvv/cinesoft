@@ -3,7 +3,7 @@ import React, { useState, useEffect, memo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { 
   Loader2, Play, Film, Tv, Sparkles, Search, Compass, Laugh, CloudRain, Rocket, Gem, Ghost, Eye, Bookmark, UserCircle, Baby, Moon, Sun, Inbox, X,
-  Zap, Heart, Palette, Grid
+  Zap, Heart, Palette, Grid, ChevronRight
 } from 'lucide-react';
 import { MovieCard, SkeletonCard } from './SharedUI';
 import * as GeminiAPI from './geminiService';
@@ -36,20 +36,21 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
   
   useEffect(() => {
     if (heroItems.length === 0) return;
-    const interval = setInterval(() => setHeroIndex(prev => (prev + 1) % heroItems.length), 8000);
+    const interval = setInterval(() => setHeroIndex(prev => (prev + 1) % heroItems.length), 10000);
     return () => clearInterval(interval);
   }, [heroItems.length]);
   
   const featured = heroItems[heroIndex];
 
   return (
-    <div className="pb-32 max-w-5xl mx-auto w-full">
-      <section className="mb-6 relative h-[70vh] sm:h-[650px] w-full overflow-hidden bg-[#050505]">
-        <AnimatePresence mode="popLayout">
+    <div className="pb-32 bg-[#050505]">
+      {/* Immersive Hero Section Matching the Screenshot */}
+      <section className="relative h-[85vh] w-full overflow-hidden">
+        <AnimatePresence mode="wait">
             {loading ? (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white/20">
+                <div key="loader" className="absolute inset-0 flex flex-col items-center justify-center bg-[#050505] z-50">
                     <Loader2 className="animate-spin mb-4 text-[#6B46C1]" size={32} />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Loading Cinema...</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Initializing CineSoft...</span>
                 </div>
             ) : featured && (
               <motion.div 
@@ -57,41 +58,45 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }} 
                 exit={{ opacity: 0 }} 
-                transition={{ duration: 1.2, ease: "easeOut" }} 
+                transition={{ duration: 1.5 }} 
                 className="absolute inset-0"
               >
-                <div 
-                    className="absolute inset-0 bg-cover bg-center transition-transform duration-[20000ms] ease-linear" 
-                    style={{ 
-                      backgroundImage: `url('${featured.backdrop || featured.poster}')`,
-                      transform: 'scale(1)' 
-                    }} 
+                {/* Ken Burns Effect Background */}
+                <motion.div 
+                  initial={{ scale: 1.1 }}
+                  animate={{ scale: 1.25 }}
+                  transition={{ duration: 10, ease: "linear" }}
+                  className="absolute inset-0 bg-cover bg-center" 
+                  style={{ backgroundImage: `url('${featured.backdrop || featured.poster}')` }}
                 />
                 
-                {/* Cinema-grade gradient overlays */}
+                {/* Deep Cinema Vignette */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-[#050505]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent h-40" />
                 
-                <div className="absolute inset-0 flex flex-col justify-end p-6 pb-12 z-10 max-w-2xl">
+                {/* Content Overlay */}
+                <div className="absolute inset-0 flex flex-col justify-end p-8 pb-16 z-10 max-w-xl">
                     <motion.div 
-                      initial={{ y: 30, opacity: 0 }} 
+                      initial={{ y: 20, opacity: 0 }} 
                       animate={{ y: 0, opacity: 1 }} 
-                      transition={{ delay: 0.3, duration: 0.8 }}
+                      transition={{ delay: 0.4, duration: 0.8 }}
                     >
-                        <span className="inline-block bg-[#6B46C1] text-white text-[9px] font-black px-3 py-1 rounded-md uppercase tracking-widest mb-4 shadow-lg shadow-purple-900/50">Top Pick</span>
-                        <h2 className="text-4xl sm:text-6xl font-black text-white mb-6 leading-tight tracking-tighter drop-shadow-2xl line-clamp-2">{featured.title}</h2>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 mb-4">
+                            <span className="bg-[#6B46C1] text-white text-[9px] font-black px-3 py-1.5 rounded-md uppercase tracking-[0.2em] shadow-lg shadow-purple-900/50">TOP PICK</span>
+                        </div>
+                        <h2 className="text-5xl sm:text-7xl font-black text-white mb-8 leading-[1.1] tracking-tighter drop-shadow-2xl">{featured.title}</h2>
+                        <div className="flex items-center gap-3">
                             <button 
                               onClick={() => onSelectMovie(featured)} 
-                              className="px-10 py-4 bg-white text-slate-900 font-black rounded-2xl active:scale-95 transition-transform text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100"
+                              className="px-8 py-4 bg-[#333333]/80 backdrop-blur-md text-white font-black rounded-full active:scale-95 transition-all text-xs uppercase tracking-[0.2em] hover:bg-[#444]"
                             >
-                              Details
+                              DETAILS
                             </button>
                             <button 
                               onClick={() => onPlayTrailer(featured)} 
-                              className="w-16 h-16 rounded-2xl bg-[#6B46C1] flex items-center justify-center text-white shadow-2xl shadow-purple-900/40 active:scale-90 transition-transform hover:bg-[#553C9A]"
+                              className="w-14 h-14 rounded-2xl bg-[#6B46C1] flex items-center justify-center text-white shadow-xl shadow-purple-900/40 active:scale-90 transition-all hover:bg-[#7c4dff]"
                             >
-                              <Play size={28} fill="currentColor" />
+                              <Play size={24} fill="currentColor" />
                             </button>
                         </div>
                     </motion.div>
@@ -101,20 +106,22 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
           </AnimatePresence>
       </section>
 
-      <div className="px-6 space-y-8">
+      {/* Tight Bento Grid Lists */}
+      <div className="px-6 -mt-10 relative z-20 space-y-12">
         {[ 
             { title: "Trending Movies", data: trendingM, icon: Film }, 
             { title: "Popular Shows", data: trendingS, icon: Tv }, 
-            { title: "For You", data: recommendations, icon: Sparkles, curated: true } 
+            { title: "AI Recommendations", data: recommendations, icon: Sparkles, color: "text-[#6B46C1]" } 
         ].map((sec, idx) => (
-          <section key={idx}>
-            <div className="flex items-center justify-between mb-6">
-                <h2 className={`text-xl font-black flex items-center gap-2 tracking-tight ${sec.curated ? 'text-[#6B46C1]' : 'text-white'}`}>
-                    <sec.icon size={20} className={sec.curated ? 'text-[#6B46C1]' : 'text-gray-500'} /> {sec.title}
+          <section key={idx} className="space-y-5">
+            <div className="flex items-center justify-between">
+                <h2 className={`text-lg font-black flex items-center gap-2.5 tracking-tight ${sec.color || 'text-white'}`}>
+                    <sec.icon size={18} className="opacity-40" /> {sec.title}
                 </h2>
+                <ChevronRight size={18} className="text-white/20" />
             </div>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-6 px-6 scroll-smooth">
-                {loading ? [1,2,3,4,5].map(i => <SkeletonCard key={i} />) : sec.data.map((m: any) => (
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 -mx-6 px-6 scroll-smooth">
+                {loading ? [1,2,3,4].map(i => <SkeletonCard key={i} />) : sec.data.map((m: any) => (
                     <MovieCard 
                         key={m.id} 
                         movie={m} 
@@ -138,25 +145,15 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
   const [filter, setFilter] = useState<'all' | 'movie' | 'show'>('all');
   const [activeGenre, setActiveGenre] = useState<string | null>(null);
 
-  // Effect 1: Debounced Text Search
   useEffect(() => {
     if (!query.trim()) return;
-
-    const delay = setTimeout(() => { 
-        performSearch(query, filter);
-    }, 500);
+    const delay = setTimeout(() => { performSearch(query, filter); }, 500);
     return () => clearTimeout(delay);
   }, [query, filter]);
 
-  // Effect 2: Immediate Genre/Filter Search (When not text searching)
   useEffect(() => {
     if (query.trim()) return;
-
-    if (activeGenre) {
-        performSearch('', filter, activeGenre);
-    } else {
-        setResults([]);
-    }
+    if (activeGenre) { performSearch('', filter, activeGenre); } else { setResults([]); }
   }, [activeGenre, filter, query]);
 
   const performSearch = async (q: string, f: string, g?: string) => {
@@ -164,9 +161,7 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
     try { 
         const data = await API.searchMovies(q, f, user.isKidsMode, g); 
         setResults(data || []); 
-    } finally { 
-        setSearching(false); 
-    }
+    } finally { setSearching(false); }
   };
   
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,27 +169,16 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
       if (activeGenre) setActiveGenre(null);
   };
   
-  const clearSearch = () => {
-    setQuery('');
-    setActiveGenre(null);
-    setResults([]);
-  };
+  const clearSearch = () => { setQuery(''); setActiveGenre(null); setResults([]); };
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { staggerChildren: 0.05 }
-    }
+    visible: { opacity: 1, transition: { staggerChildren: 0.04 } }
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { type: 'spring', stiffness: 300, damping: 24 }
-    }
+    hidden: { opacity: 0, scale: 0.9, y: 10 },
+    visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 25 } }
   };
 
   return (
@@ -202,56 +186,51 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
         <div className="relative mb-8">
             <input 
                 type="text" 
-                placeholder={activeGenre ? `Browsing ${activeGenre}...` : "Search titles, vibes, genres..."} 
+                placeholder={activeGenre ? `Browsing ${activeGenre}...` : "Search titles, vibes..."} 
                 value={query} 
                 onChange={handleSearchChange}
-                className={`w-full bg-[#1A1A1A] border rounded-2xl pl-12 pr-12 py-4 outline-none font-bold text-sm text-white focus:border-[#6B46C1] transition-colors placeholder:text-gray-600 shadow-xl border-white/10 ${activeGenre ? 'border-[#6B46C1]/50' : ''}`} 
+                className={`w-full bg-[#121212] border rounded-2xl pl-12 pr-12 py-4 outline-none font-bold text-sm text-white focus:border-[#6B46C1] transition-all placeholder:text-gray-600 shadow-2xl border-white/5 ${activeGenre ? 'border-[#6B46C1]/40' : ''}`} 
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             {(query || activeGenre) && (
-                <button onClick={clearSearch} className="absolute right-12 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-white">
-                    <X size={16} />
-                </button>
+                <button onClick={clearSearch} className="absolute right-12 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-white"><X size={16} /></button>
             )}
             {searching && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 animate-spin text-[#6B46C1]" size={20} />}
         </div>
         
-        <div className="flex gap-2 mb-8 overflow-x-auto no-scrollbar">
+        <div className="flex gap-2 mb-10 overflow-x-auto no-scrollbar">
             {['all', 'movie', 'show'].map((f: any) => (
-                <button key={f} onClick={() => setFilter(f)} className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${filter === f ? 'bg-[#6B46C1] text-white border-transparent' : 'bg-[#1A1A1A] text-gray-400 border-white/5'}`}>{f}</button>
+                <button key={f} onClick={() => setFilter(f)} className={`px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${filter === f ? 'bg-[#6B46C1] text-white border-transparent shadow-lg shadow-purple-900/30' : 'bg-[#121212] text-gray-500 border-white/5'}`}>{f}</button>
             ))}
         </div>
 
         {results.length === 0 && !searching && (
-            <div className="space-y-10">
+            <div className="space-y-12">
                 <section>
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2"><Compass size={12} /> DISCOVER BY VIBE</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-6 flex items-center gap-2"><Compass size={12} /> CURATED VIBES</h3>
                     <div className="grid grid-cols-2 gap-3">
                         {SEMANTIC_PROMPTS.map(p => (
-                            <button key={p.label} onClick={() => setQuery(p.query)} className="p-3 rounded-xl bg-[#1A1A1A] border border-white/5 flex items-center gap-3 group hover:bg-[#222] active:scale-95 transition-all text-left hover:border-[#6B46C1]/50 shadow-sm">
-                                <div className="w-8 h-8 rounded-full bg-[#6B46C1]/10 flex items-center justify-center text-[#6B46C1] group-hover:scale-110 transition-transform">
-                                    <p.icon size={16} />
+                            <button key={p.label} onClick={() => setQuery(p.query)} className="p-4 rounded-2xl bg-[#121212] border border-white/5 flex items-center gap-4 group active:scale-95 transition-all text-left hover:border-[#6B46C1]/30">
+                                <div className="w-10 h-10 rounded-xl bg-[#6B46C1]/10 flex items-center justify-center text-[#6B46C1] group-hover:bg-[#6B46C1] group-hover:text-white transition-all">
+                                    <p.icon size={18} />
                                 </div>
-                                <span className="text-[9px] font-black uppercase tracking-widest text-gray-300 group-hover:text-white transition-colors">{p.label}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">{p.label}</span>
                             </button>
                         ))}
                     </div>
                 </section>
                 
                 <section>
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2"><Grid size={12} /> BROWSE GENRES</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 mb-6 flex items-center gap-2"><Grid size={12} /> GENRES</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         {GENRES.map(g => (
                             <button 
                                 key={g.id} 
-                                onClick={() => { 
-                                    setActiveGenre(g.id); 
-                                    setQuery(''); 
-                                }} 
-                                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all shadow-sm ${activeGenre === g.id ? 'bg-[#6B46C1] border-transparent' : 'bg-[#1A1A1A] border-white/5 hover:border-[#6B46C1]/30'}`}
+                                onClick={() => { setActiveGenre(g.id); setQuery(''); }} 
+                                className={`p-5 rounded-2xl border flex flex-col items-center justify-center gap-3 active:scale-95 transition-all ${activeGenre === g.id ? 'bg-[#6B46C1] border-transparent shadow-lg shadow-purple-900/40' : 'bg-[#121212] border-white/5 hover:border-white/10'}`}
                             >
-                                <g.icon size={20} style={{ color: activeGenre === g.id ? 'white' : g.color }} className="transition-colors" />
-                                <span className={`text-[9px] font-black uppercase tracking-widest ${activeGenre === g.id ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{g.label}</span>
+                                <g.icon size={24} style={{ color: activeGenre === g.id ? 'white' : g.color }} />
+                                <span className={`text-[10px] font-black uppercase tracking-widest ${activeGenre === g.id ? 'text-white' : 'text-gray-400'}`}>{g.label}</span>
                             </button>
                         ))}
                     </div>
@@ -263,9 +242,8 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
             <motion.div 
               key={(query || activeGenre) + filter} 
               variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4"
+              initial="hidden" animate="visible"
+              className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3"
             >
                 {results.map(m => (
                     <motion.div key={m.id} variants={itemVariants}>
@@ -280,37 +258,35 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
 
 export const LibraryPage = memo(({ user, onSelectMovie }: any) => {
   const [tab, setTab] = useState<'watchlist' | 'watched' | 'favorites'>('watchlist');
-  const items = tab === 'watchlist' 
-    ? (user.watchlist || []) 
-    : (tab === 'watched' ? (user.watchedHistory || []) : (user.favorites || []));
+  const items = tab === 'watchlist' ? (user.watchlist || []) : (tab === 'watched' ? (user.watchedHistory || []) : (user.favorites || []));
   
   return (
     <div className="pt-24 px-6 pb-32 max-w-5xl mx-auto w-full">
-        <div className="grid grid-cols-2 gap-3 mb-8">
-            {[{ label: 'WATCHED', value: user.watched.length, icon: Eye, color: '#6B46C1' }, { label: 'PLANNING', value: user.watchlist.length, icon: Bookmark, color: '#F6AD55' }].map(s => (
-                <div key={s.label} className="p-5 bg-[#1A1A1A] rounded-2xl border border-white/5 flex flex-col justify-between h-24 shadow-sm">
-                    <s.icon size={18} style={{ color: s.color }} />
-                    <div><p className="text-2xl font-black text-white">{s.value}</p><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{s.label}</p></div>
+        <div className="grid grid-cols-2 gap-3 mb-10">
+            {[{ label: 'TOTAL SEEN', value: user.watched.length, icon: Eye, color: '#6B46C1' }, { label: 'WATCHLIST', value: user.watchlist.length, icon: Bookmark, color: '#F6AD55' }].map(s => (
+                <div key={s.label} className="p-6 bg-[#121212] rounded-[1.5rem] border border-white/5 flex flex-col justify-between h-28 shadow-xl">
+                    <s.icon size={20} style={{ color: s.color }} />
+                    <div><p className="text-3xl font-black text-white leading-none mb-1">{s.value}</p><p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">{s.label}</p></div>
                 </div>
             ))}
         </div>
-        <div className="flex bg-[#1A1A1A] p-1 rounded-xl mb-8 border border-white/5 shadow-sm">
+        <div className="flex bg-[#121212] p-1.5 rounded-2xl mb-10 border border-white/5 shadow-2xl">
             {['watchlist', 'watched', 'favorites'].map((t: any) => (
-                <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${tab === t ? 'bg-[#333] text-white shadow-sm' : 'text-gray-500'}`}>{t}</button>
+                <button key={t} onClick={() => setTab(t)} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === t ? 'bg-[#222] text-white shadow-xl' : 'text-gray-500'}`}>{t}</button>
             ))}
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
             {items.map((m: any) => (
                 <MovieCard key={m.id} movie={m} onClick={() => onSelectMovie(m)} isWatched={user.watched.includes(m.id)} isInWatchlist={user.watchlist.some((w: any) => w.id === m.id)} fullWidth />
             ))}
         </div>
         {items.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center opacity-50">
-            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-               <Inbox size={32} className="text-gray-400" />
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6">
+               <Inbox size={32} className="text-white/20" />
             </div>
-            <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">No movies found</p>
-            <p className="text-gray-600 text-[10px] mt-1">Start exploring to add some!</p>
+            <p className="text-gray-400 text-xs font-black uppercase tracking-widest">Library Empty</p>
+            <p className="text-gray-600 text-[10px] mt-2">Start curating your cinema journey</p>
           </div>
         )}
     </div>
@@ -320,31 +296,31 @@ export const LibraryPage = memo(({ user, onSelectMovie }: any) => {
 export const ProfilePage = memo(({ user, setUser }: any) => {
   return (
     <div className="pt-24 px-6 pb-32 max-w-xl mx-auto w-full">
-        <div className="flex flex-col items-center mb-10 text-center">
-            <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#6B46C1] to-[#44337A] flex items-center justify-center shadow-2xl mb-4 text-white border-2 border-white/5">
-                <UserCircle size={40} />
+        <div className="flex flex-col items-center mb-12 text-center">
+            <div className="w-28 h-28 rounded-[2.5rem] bg-gradient-to-br from-[#6B46C1] to-[#44337A] flex items-center justify-center shadow-2xl mb-6 text-white border-4 border-white/10 overflow-hidden">
+                <UserCircle size={60} strokeWidth={1.5} />
             </div>
-            <h2 className="text-2xl font-black text-white">{user.name}</h2>
-            <p className="text-gray-500 text-xs font-bold mt-1">{user.email}</p>
+            <h2 className="text-3xl font-black text-white leading-tight">{user.name}</h2>
+            <p className="text-gray-500 text-xs font-bold mt-1 uppercase tracking-widest">{user.email}</p>
         </div>
         
         <div className="space-y-6">
-            <div className="bg-[#1A1A1A] border border-white/5 rounded-2xl overflow-hidden shadow-sm">
+            <div className="bg-[#121212] border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl">
                 {[
                     { label: 'Kids Mode', icon: Baby, value: user.isKidsMode, toggle: () => setUser({...user, isKidsMode: !user.isKidsMode}) },
                 ].map((item, i) => (
-                    <div key={i} className={`flex items-center justify-between p-5 border-b border-white/5`}>
+                    <div key={i} className={`flex items-center justify-between p-6`}>
                         <div className="flex items-center gap-4">
-                            <div className="text-[#6B46C1]"><item.icon size={20} /></div>
-                            <span className="text-xs font-bold text-white uppercase tracking-wider">{item.label}</span>
+                            <div className="text-[#6B46C1] bg-[#6B46C1]/10 p-3 rounded-2xl"><item.icon size={24} /></div>
+                            <span className="text-sm font-black text-white uppercase tracking-widest">{item.label}</span>
                         </div>
-                        <button onClick={item.toggle} className={`w-12 h-7 rounded-full transition-colors relative ${item.value ? 'bg-[#6B46C1]' : 'bg-[#333]'}`}>
-                            <motion.div animate={{ x: item.value ? 22 : 2 }} className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-sm" />
+                        <button onClick={item.toggle} className={`w-14 h-8 rounded-full transition-all relative ${item.value ? 'bg-[#6B46C1]' : 'bg-[#333]'}`}>
+                            <motion.div animate={{ x: item.value ? 26 : 4 }} className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-lg" />
                         </button>
                     </div>
                 ))}
             </div>
-            <button onClick={() => { localStorage.removeItem('cinesoft_user'); window.location.reload(); }} className="w-full p-4 bg-red-500/10 text-red-500 rounded-xl font-black text-[10px] uppercase tracking-widest active:scale-95 transition-transform hover:bg-red-500/20">Sign Out</button>
+            <button onClick={() => { localStorage.removeItem('cinesoft_user'); window.location.reload(); }} className="w-full p-5 bg-red-500/10 text-red-500 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.3em] active:scale-95 transition-all hover:bg-red-500/20">Sign Out</button>
         </div>
     </div>
   );
