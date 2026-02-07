@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -44,9 +45,9 @@ export const Button = memo(({ children, onClick, className = "", variant = "prim
   const base = "px-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 disabled:opacity-50 text-xs transition-transform duration-100 active:scale-95";
   const variants: any = {
     primary: "bg-[#6B46C1]/10 text-[#6B46C1]",
-    secondary: "bg-[#F0FFF4] text-[#2F855A] dark:bg-[#2D353E] dark:text-[#F0FFF4]",
-    accent: "bg-[#FFF5F5] text-[#C53030] dark:bg-[#3E2D2D] dark:text-[#FFF5F5]",
-    dark: "bg-black/80 text-white dark:bg-white/10 dark:text-white border border-white/10",
+    secondary: "bg-[#2D353E] text-[#F0FFF4]",
+    accent: "bg-[#3E2D2D] text-[#FFF5F5]",
+    dark: "bg-black/80 text-white border border-white/10",
     pro: "bg-gradient-to-r from-[#6B46C1] to-[#805AD5] text-white shadow-lg shadow-purple-500/20"
   };
   return (
@@ -127,7 +128,7 @@ export const MovieCard = memo(({
             <div className="w-6 h-6 rounded-full bg-white text-[#6B46C1] flex items-center justify-center border border-white/10 shadow-lg"><Bookmark size={10} fill="currentColor" /></div>
           )}
         </div>
-        <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-[9px] font-black shadow-lg flex items-center gap-1 text-white z-10 border border-white/10 group-hover:bg-[#6B46C1] group-hover:border-[#6B46C1] transition-colors">
+        <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-md text-[9px] font-black shadow-lg flex items-center gap-1 text-white z-10 border border-white/10 group-hover:bg-[#6B46C1] group-hover:border-[#6B46C1] group-hover:text-white transition-colors">
           <Star size={8} className="fill-yellow-400 text-yellow-400 group-hover:text-white group-hover:fill-white" /> {getCommunityRating(movie.id, movie.rating)}
         </div>
       </div>

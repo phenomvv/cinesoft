@@ -3,7 +3,7 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { Movie, User, Theme } from './types';
+import { Movie, User } from './types';
 import * as GeminiAPI from './geminiService';
 import * as TmdbAPI from './tmdbService';
 import { GlobalHeader, BottomNav, Toast } from './SharedUI';
@@ -43,7 +43,6 @@ const App = () => {
     } catch { return DEFAULT_USER; }
   });
   
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('cinesoft_theme') as Theme) || 'dark');
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
   const [activeTrailerUrl, setActiveTrailerUrl] = useState<string | null>(null);
@@ -76,11 +75,6 @@ const App = () => {
       showToast("Error loading trailer");
     }
   };
-
-  useEffect(() => { 
-    document.documentElement.classList.toggle('dark', theme === 'dark'); 
-    localStorage.setItem('cinesoft_theme', theme); 
-  }, [theme]);
   
   useEffect(() => { 
     localStorage.setItem('cinesoft_user', JSON.stringify(user)); 
@@ -140,7 +134,7 @@ const App = () => {
   });
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#050505] text-[#F5F5F5]' : 'bg-[#F2F4F7] text-slate-900'} font-sans`}>
+    <div className="min-h-screen font-sans bg-[#050505] text-[#F5F5F5]">
       <HashRouter>
         <motion.div 
           animate={{ scale: isModalOpen ? 0.96 : 1, opacity: isModalOpen ? 0.5 : 1, filter: isModalOpen ? 'blur(2px)' : 'blur(0px)' }} 
@@ -153,7 +147,7 @@ const App = () => {
               <Route path="/" element={<HomePage trendingM={trendingMovies} trendingS={trendingShows} recommendations={recommendations} loading={loading} user={user} onSelectMovie={setSelectedMovie} onPlayTrailer={handlePlayTrailer} />} />
               <Route path="/search" element={<ExplorePage onSelectMovie={setSelectedMovie} user={user} />} />
               <Route path="/library" element={<LibraryPage user={user} onSelectMovie={setSelectedMovie} />} />
-              <Route path="/profile" element={<ProfilePage user={user} setUser={setUser} theme={theme} setTheme={setTheme} />} />
+              <Route path="/profile" element={<ProfilePage user={user} setUser={setUser} />} />
             </Routes>
           </Suspense>
         </motion.div>

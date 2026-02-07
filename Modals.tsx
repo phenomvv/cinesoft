@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect, memo } from 'react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import React, { useState, useEffect, memo, useRef } from 'react';
+import { motion, AnimatePresence, Variants, useMotionValue, useTransform, animate } from 'framer-motion';
 import { 
   X, Star, Play, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon, MonitorPlay 
 } from 'lucide-react';
@@ -124,6 +124,37 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
   const [watchedEpisodes, setWatchedEpisodes] = useState<string[]>(user.watchedEpisodes || []);
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
 
+  // Pull-to-zoom logic
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const dragY = useMotionValue(0);
+  const bgScale = useTransform(dragY, [0, 500], [1, 1.3]);
+  const dragStartY = useRef(0);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (scrollRef.current && scrollRef.current.scrollTop <= 1) {
+      dragStartY.current = e.touches[0].clientY;
+    }
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (dragStartY.current === 0) return;
+    const currentY = e.touches[0].clientY;
+    const delta = currentY - dragStartY.current;
+
+    // Only allow pull if delta > 0 (pulling down) and we are at the top
+    if (delta > 0 && scrollRef.current?.scrollTop! <= 1) {
+      dragY.set(delta);
+    } else {
+      dragY.set(0);
+      dragStartY.current = 0;
+    }
+  };
+
+  const onTouchEnd = () => {
+    dragStartY.current = 0;
+    animate(dragY, 0, { type: "spring", stiffness: 300, damping: 30 });
+  };
+
   useEffect(() => {
     if (initialMovie) { 
       API.fetchMovieDetails(initialMovie.id, initialMovie.type).then(d => { 
@@ -173,15 +204,24 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
           {selectedEpisode && <EpisodeDetailModal episode={selectedEpisode} seasonNumber={activeSeason} showTitle={movie.title} onClose={() => setSelectedEpisode(null)} isWatched={watchedEpisodes.includes(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} onToggleWatch={() => toggleEpisode(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} />}
         </AnimatePresence>
         
-        <div className="absolute top-0 left-0 right-0 h-[45vh] z-0 pointer-events-none">
+        <motion.div 
+            style={{ scale: bgScale, originY: 0 }}
+            className="absolute top-0 left-0 right-0 h-[45vh] z-0 pointer-events-none"
+        >
            <div className="absolute inset-0 bg-cover bg-top" style={{ backgroundImage: `url(${bgImage})` }} />
            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent" />
            <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent h-40" />
-        </div>
+        </motion.div>
         
         <button onClick={onClose} className="absolute top-6 right-6 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center z-[410] text-white border border-white/5 active:scale-90 transition-transform hover:bg-white/10"><X size={20} /></button>
         
-        <div className="flex-1 overflow-y-auto relative z-10 no-scrollbar">
+        <div 
+            ref={scrollRef}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+            className="flex-1 overflow-y-auto relative z-10 no-scrollbar overscroll-y-contain"
+        >
            <div className="pt-[35vh] px-6 pb-32 space-y-8">
              <div className="flex gap-6 items-end">
                <div className="relative w-32 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/10 bg-gray-900">

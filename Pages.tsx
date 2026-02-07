@@ -69,7 +69,7 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
                 />
                 
                 {/* Cinema-grade gradient overlays */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent h-40" />
                 
                 <div className="absolute inset-0 flex flex-col justify-end p-6 pb-12 z-10 max-w-2xl">
@@ -83,7 +83,7 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, recommendat
                         <div className="flex items-center gap-4">
                             <button 
                               onClick={() => onSelectMovie(featured)} 
-                              className="px-10 py-4 bg-white text-black font-black rounded-2xl active:scale-95 transition-transform text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100"
+                              className="px-10 py-4 bg-white text-slate-900 font-black rounded-2xl active:scale-95 transition-transform text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100"
                             >
                               Details
                             </button>
@@ -205,7 +205,7 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
                 placeholder={activeGenre ? `Browsing ${activeGenre}...` : "Search titles, vibes, genres..."} 
                 value={query} 
                 onChange={handleSearchChange}
-                className={`w-full bg-[#1A1A1A] border rounded-2xl pl-12 pr-12 py-4 outline-none font-bold text-sm text-white focus:border-[#6B46C1] transition-colors placeholder:text-gray-600 shadow-xl ${activeGenre ? 'border-[#6B46C1]/50' : 'border-white/10'}`} 
+                className={`w-full bg-[#1A1A1A] border rounded-2xl pl-12 pr-12 py-4 outline-none font-bold text-sm text-white focus:border-[#6B46C1] transition-colors placeholder:text-gray-600 shadow-xl border-white/10 ${activeGenre ? 'border-[#6B46C1]/50' : ''}`} 
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             {(query || activeGenre) && (
@@ -228,7 +228,7 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 flex items-center gap-2"><Compass size={12} /> DISCOVER BY VIBE</h3>
                     <div className="grid grid-cols-2 gap-3">
                         {SEMANTIC_PROMPTS.map(p => (
-                            <button key={p.label} onClick={() => setQuery(p.query)} className="p-3 rounded-xl bg-[#1A1A1A] border border-white/5 flex items-center gap-3 group hover:bg-[#222] active:scale-95 transition-all text-left hover:border-[#6B46C1]/50">
+                            <button key={p.label} onClick={() => setQuery(p.query)} className="p-3 rounded-xl bg-[#1A1A1A] border border-white/5 flex items-center gap-3 group hover:bg-[#222] active:scale-95 transition-all text-left hover:border-[#6B46C1]/50 shadow-sm">
                                 <div className="w-8 h-8 rounded-full bg-[#6B46C1]/10 flex items-center justify-center text-[#6B46C1] group-hover:scale-110 transition-transform">
                                     <p.icon size={16} />
                                 </div>
@@ -248,7 +248,7 @@ export const ExplorePage = memo(({ onSelectMovie, user }: any) => {
                                     setActiveGenre(g.id); 
                                     setQuery(''); 
                                 }} 
-                                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all ${activeGenre === g.id ? 'bg-[#6B46C1] border-transparent' : 'bg-[#1A1A1A] border-white/5 hover:border-white/10'}`}
+                                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 group active:scale-95 transition-all shadow-sm ${activeGenre === g.id ? 'bg-[#6B46C1] border-transparent' : 'bg-[#1A1A1A] border-white/5 hover:border-[#6B46C1]/30'}`}
                             >
                                 <g.icon size={20} style={{ color: activeGenre === g.id ? 'white' : g.color }} className="transition-colors" />
                                 <span className={`text-[9px] font-black uppercase tracking-widest ${activeGenre === g.id ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>{g.label}</span>
@@ -288,13 +288,13 @@ export const LibraryPage = memo(({ user, onSelectMovie }: any) => {
     <div className="pt-24 px-6 pb-32 max-w-5xl mx-auto w-full">
         <div className="grid grid-cols-2 gap-3 mb-8">
             {[{ label: 'WATCHED', value: user.watched.length, icon: Eye, color: '#6B46C1' }, { label: 'PLANNING', value: user.watchlist.length, icon: Bookmark, color: '#F6AD55' }].map(s => (
-                <div key={s.label} className="p-5 bg-[#1A1A1A] rounded-2xl border border-white/5 flex flex-col justify-between h-24">
+                <div key={s.label} className="p-5 bg-[#1A1A1A] rounded-2xl border border-white/5 flex flex-col justify-between h-24 shadow-sm">
                     <s.icon size={18} style={{ color: s.color }} />
                     <div><p className="text-2xl font-black text-white">{s.value}</p><p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{s.label}</p></div>
                 </div>
             ))}
         </div>
-        <div className="flex bg-[#1A1A1A] p-1 rounded-xl mb-8 border border-white/5">
+        <div className="flex bg-[#1A1A1A] p-1 rounded-xl mb-8 border border-white/5 shadow-sm">
             {['watchlist', 'watched', 'favorites'].map((t: any) => (
                 <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${tab === t ? 'bg-[#333] text-white shadow-sm' : 'text-gray-500'}`}>{t}</button>
             ))}
@@ -317,7 +317,7 @@ export const LibraryPage = memo(({ user, onSelectMovie }: any) => {
   );
 });
 
-export const ProfilePage = memo(({ user, setUser, theme, setTheme }: any) => {
+export const ProfilePage = memo(({ user, setUser }: any) => {
   return (
     <div className="pt-24 px-6 pb-32 max-w-xl mx-auto w-full">
         <div className="flex flex-col items-center mb-10 text-center">
@@ -329,12 +329,11 @@ export const ProfilePage = memo(({ user, setUser, theme, setTheme }: any) => {
         </div>
         
         <div className="space-y-6">
-            <div className="bg-[#1A1A1A] border border-white/5 rounded-2xl overflow-hidden">
+            <div className="bg-[#1A1A1A] border border-white/5 rounded-2xl overflow-hidden shadow-sm">
                 {[
                     { label: 'Kids Mode', icon: Baby, value: user.isKidsMode, toggle: () => setUser({...user, isKidsMode: !user.isKidsMode}) },
-                    { label: 'Dark Theme', icon: theme === 'dark' ? Moon : Sun, value: theme === 'dark', toggle: () => setTheme(theme === 'dark' ? 'light' : 'dark') }
                 ].map((item, i) => (
-                    <div key={i} className={`flex items-center justify-between p-5 ${i !== 1 ? 'border-b border-white/5' : ''}`}>
+                    <div key={i} className={`flex items-center justify-between p-5 border-b border-white/5`}>
                         <div className="flex items-center gap-4">
                             <div className="text-[#6B46C1]"><item.icon size={20} /></div>
                             <span className="text-xs font-bold text-white uppercase tracking-wider">{item.label}</span>

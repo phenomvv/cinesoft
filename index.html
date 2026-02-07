@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en" style="background-color: #050505; overflow-x: hidden; width: 100%; overscroll-behavior-x: none;">
 <head>
@@ -8,6 +9,16 @@
     <meta name="theme-color" content="#050505">
     <title>CineSoft - Movie Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Quicksand', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *::-webkit-scrollbar { display: none; }
@@ -17,7 +28,7 @@
             overflow-x: hidden;
             width: 100%;
             position: relative;
-            overscroll-behavior-x: none; /* Prevents whole-page swipe gestures */
+            overscroll-behavior-x: none;
         }
 
         body {
@@ -27,7 +38,7 @@
             margin: 0;
             padding: 0;
             -webkit-tap-highlight-color: transparent;
-            touch-action: pan-x pan-y; /* Disables double-tap zoom and pinch zoom behaviors */
+            touch-action: pan-x pan-y;
         }
 
         #root {
