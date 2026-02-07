@@ -24,7 +24,8 @@ const DEFAULT_USER: User = {
   watched: [],
   watchedEpisodes: [],
   userRatings: {},
-  favoriteMovieIds: []
+  favoriteMovieIds: [],
+  notificationIds: []
 };
 
 const HomePage = lazy(() => import('./Pages').then(m => ({ default: m.HomePage })));
@@ -50,6 +51,7 @@ const App = () => {
   
   const [trendingMovies, setTrendingMovies] = useState<Movie[]>([]);
   const [trendingShows, setTrendingShows] = useState<Movie[]>([]);
+  const [anticipatedMovies, setAnticipatedMovies] = useState<Movie[]>([]);
   const [recommendations, setRecommendations] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -84,15 +86,17 @@ const App = () => {
     const loadHomeData = async () => { 
       setLoading(true); 
       try { 
-        const [m, s, r] = await Promise.all([
+        const [m, s, r, a] = await Promise.all([
           API.fetchTrendingMovies(user.isKidsMode), 
           API.fetchTrendingShows(user.isKidsMode), 
-          API.fetchRecommendations(user.watchlist.map(m => m.title), user.isKidsMode)
+          API.fetchRecommendations(user.watchlist.map(m => m.title), user.isKidsMode),
+          API.fetchUpcomingMovies(user.isKidsMode)
         ]); 
         if (mounted) {
           setTrendingMovies(m || []); 
           setTrendingShows(s || []); 
           setRecommendations(r || []); 
+          setAnticipatedMovies(a || []);
         }
       } catch (err) {
         console.error("Data load failed", err);
@@ -132,6 +136,14 @@ const App = () => {
     return { ...prev, favoriteMovieIds: updatedIds, favorites: updatedList };
   });
 
+  const onToggleNotification = (movie: Movie) => setUser(prev => {
+    const exists = prev.notificationIds?.includes(movie.id);
+    const updatedIds = exists 
+      ? prev.notificationIds.filter(id => id !== movie.id) 
+      : [...(prev.notificationIds || []), movie.id];
+    return { ...prev, notificationIds: updatedIds };
+  });
+
   const onRateMovie = (movieId: string, rating: number) => {
     setUser(prev => ({
       ...prev,
@@ -150,7 +162,7 @@ const App = () => {
           <GlobalHeader user={user} />
           <Suspense fallback={<div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-[#6B46C1]" /></div>}>
             <Routes>
-              <Route path="/" element={<HomePage trendingM={trendingMovies} trendingS={trendingShows} recommendations={recommendations} loading={loading} user={user} onSelectMovie={setSelectedMovie} onPlayTrailer={handlePlayTrailer} />} />
+              <Route path="/" element={<HomePage trendingM={trendingMovies} trendingS={trendingShows} anticipatedM={anticipatedMovies} recommendations={recommendations} loading={loading} user={user} onSelectMovie={setSelectedMovie} onPlayTrailer={handlePlayTrailer} />} />
               <Route path="/search" element={<ExplorePage onSelectMovie={setSelectedMovie} user={user} />} />
               <Route path="/library" element={<LibraryPage user={user} onSelectMovie={setSelectedMovie} />} />
               <Route path="/profile" element={<ProfilePage user={user} setUser={setUser} />} />
@@ -175,6 +187,7 @@ const App = () => {
                 onToggleWatchlist={onToggleWatchlist} 
                 onToggleWatched={onToggleWatched} 
                 onToggleFavorite={onToggleFavorite}
+                onToggleNotification={onToggleNotification}
                 onRateMovie={onRateMovie}
                 onSelectPerson={setSelectedPerson} 
                 onPlayTrailer={handlePlayTrailer}

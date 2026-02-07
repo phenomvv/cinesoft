@@ -2,11 +2,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Movie, Person, Season } from "./types";
 
-// --- Initialization Logic ---
 const apiKey = process.env.API_KEY;
 let ai: GoogleGenAI | null = null;
 
-// Only attempt to initialize if a key is present to prevent immediate crash
 if (apiKey && apiKey.length > 0) {
   try {
     ai = new GoogleGenAI({ apiKey });
@@ -17,7 +15,6 @@ if (apiKey && apiKey.length > 0) {
   console.warn("Gemini API Key is missing. App is running in Demo Mode.");
 }
 
-// --- Schema ---
 const movieSchema = {
   type: Type.OBJECT,
   properties: {
@@ -49,7 +46,6 @@ const movieSchema = {
   required: ['id', 'title', 'year', 'rating', 'type', 'poster', 'description', 'genres', 'director', 'cast', 'streamingPlatforms']
 };
 
-// --- Demo Data Fallback ---
 const DEMO_MOVIES: Movie[] = [
   {
     id: 'demo-1',
@@ -124,7 +120,6 @@ const fetchList = async (prompt: string, kidsMode: boolean = false): Promise<Mov
       config: {
         responseMimeType: "application/json",
         responseSchema: { type: Type.ARRAY, items: movieSchema },
-        // NOTE: Google Search grounding is NOT allowed when responseMimeType is application/json
         thinkingConfig: { thinkingBudget: 0 }
       },
     });
@@ -138,13 +133,18 @@ const fetchList = async (prompt: string, kidsMode: boolean = false): Promise<Mov
 };
 
 export const fetchTrendingMovies = (kidsMode: boolean = false) => 
-  fetchList("Search for the top 8 trending MOVIES released in late 2024 or coming in 2025. Return JSON.", kidsMode);
+  fetchList("Search for the top 8 trending MOVIES released in late 2024 or early 2025. Return JSON.", kidsMode);
 
 export const fetchTrendingShows = (kidsMode: boolean = false) => 
   fetchList("Search for the top 8 currently popular TV series/shows. Return JSON.", kidsMode);
 
 export const fetchInTheaters = (kidsMode: boolean = false) => 
   fetchList("Search for 6 movies currently showing in major theaters now. Return JSON.", kidsMode);
+
+export const fetchUpcomingMovies = (kidsMode: boolean = false) => {
+  const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  return fetchList(`Today is ${today}. Search for exactly 8 highly anticipated movies and TV shows that are scheduled for release STRICTLY AFTER ${today}. Do not include anything that has already premiered. Focus on upcoming blockbusters and major streaming originals for mid-to-late 2025. Return JSON.`, kidsMode);
+};
 
 export const fetchRecommendations = (likedTitles: string[], kidsMode: boolean = false) => {
   const context = likedTitles.length > 0 

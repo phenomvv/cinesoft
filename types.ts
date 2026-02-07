@@ -23,6 +23,7 @@ export interface Movie {
   id: string;
   title: string;
   year: string;
+  releaseDate?: string;
   rating: number; 
   type: 'movie' | 'show';
   poster: string;
@@ -62,12 +63,13 @@ export interface User {
   traktConnected: boolean;
   traktUsername: string | null;
   watchlist: Movie[];
-  favorites: Movie[]; // Full movie objects for the Favorites tab
-  watchedHistory: Movie[]; // Full movie objects for the Watched tab
+  favorites: Movie[]; 
+  watchedHistory: Movie[]; 
   watched: string[]; 
   watchedEpisodes: string[]; 
   userRatings: Record<string, number>;
   favoriteMovieIds: string[];
+  notificationIds: string[];
 }
 
 export type Theme = 'light' | 'dark';
