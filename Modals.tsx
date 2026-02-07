@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, memo, useRef } from 'react';
-import { motion, AnimatePresence, Variants, useMotionValue, useTransform, animate, useSpring } from 'framer-motion';
+import { motion, AnimatePresence, Variants, useMotionValue, useTransform, animate, useSpring, useScroll } from 'framer-motion';
 import { 
   X, Star, Play, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon, MonitorPlay 
 } from 'lucide-react';
@@ -50,7 +50,11 @@ export const VideoModal = ({ url, onClose }: any) => {
       initial="initial" animate="animate" exit="exit" variants={modalOverlay} 
       className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 overflow-hidden"
     >
-      <button onClick={onClose} className="absolute top-6 right-6 w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-white z-[1010] active:scale-90 transition-transform hover:bg-white/20">
+      <button 
+        onClick={onClose} 
+        className="absolute w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-white z-[1010] active:scale-90 transition-transform hover:bg-white/20 shadow-xl border border-white/5"
+        style={{ top: 'calc(1.5rem + env(safe-area-inset-top))', right: '1.5rem' }}
+      >
         <X size={24} />
       </button>
       
@@ -93,7 +97,13 @@ const EpisodeDetailModal = memo(({ episode, seasonNumber, showTitle, onClose, is
       <div className="relative aspect-video w-full flex-shrink-0 bg-gray-900">
         <img src={episode.thumbnail || FALLBACK_POSTER} className="w-full h-full object-cover" alt={episode.title} loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-transparent" />
-        <button onClick={onClose} className="absolute top-4 left-4 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white border border-white/10 active:scale-90 transition-transform"><ChevronDown size={20} /></button>
+        <button 
+            onClick={onClose} 
+            className="absolute left-4 w-10 h-10 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 active:scale-90 transition-transform shadow-lg"
+            style={{ top: 'calc(1rem + env(safe-area-inset-top))' }}
+        >
+            <ChevronDown size={20} />
+        </button>
       </div>
       <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
         <div className="flex items-start justify-between">
@@ -124,13 +134,13 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
   const [watchedEpisodes, setWatchedEpisodes] = useState<string[]>(user.watchedEpisodes || []);
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
 
-  // Pull-to-zoom & Parallax Logic
   const scrollRef = useRef<HTMLDivElement>(null);
-  const dragY = useMotionValue(0);
+
+  const { scrollY } = useScroll({ container: scrollRef });
+  const bgBlur = useTransform(scrollY, [0, 400], ["blur(0px)", "blur(12px)"]);
   
-  // Damped scale: Increased intensity (1.45 max)
+  const dragY = useMotionValue(0);
   const bgScale = useTransform(dragY, [0, 600], [1, 1.45]);
-  // Parallax Content: Increased movement (200px max)
   const contentY = useTransform(dragY, [0, 600], [0, 200]);
   
   const dragStartY = useRef(0);
@@ -145,24 +155,15 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
 
   const onTouchMove = (e: React.TouchEvent) => {
     if (!isDragging.current) return;
-    
     const currentY = e.touches[0].clientY;
     const rawDelta = currentY - dragStartY.current;
-
-    // Only activate if pulling down at the very top
     if (rawDelta > 0 && scrollRef.current?.scrollTop! <= 0) {
-      // Apply non-linear resistance (Rubber banding)
-      // The formula: damped = (delta * 0.4) is simple and effective.
-      // For more "premium" feel: damped = delta ^ 0.85
       const damped = Math.pow(rawDelta, 0.85); 
       dragY.set(damped);
     } else if (rawDelta < 0 && dragY.get() > 0) {
-       // If dragging back up while extended, reduce dragY
-       // This handles the user changing mind mid-pull
        dragY.set(Math.max(0, dragY.get() + rawDelta));
-       dragStartY.current = currentY; // Reset anchor to prevent jumps
+       dragStartY.current = currentY;
     } else {
-      // Reset if scrolling down normal content
       dragY.set(0);
       if (rawDelta < 0) isDragging.current = false;
     }
@@ -171,7 +172,6 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
   const onTouchEnd = () => {
     isDragging.current = false;
     dragStartY.current = 0;
-    // Smooth spring release
     animate(dragY, 0, { type: "spring", stiffness: 200, damping: 20, mass: 0.5 });
   };
 
@@ -224,17 +224,23 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
           {selectedEpisode && <EpisodeDetailModal episode={selectedEpisode} seasonNumber={activeSeason} showTitle={movie.title} onClose={() => setSelectedEpisode(null)} isWatched={watchedEpisodes.includes(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} onToggleWatch={() => toggleEpisode(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} />}
         </AnimatePresence>
         
-        {/* Background Layer - Scales up */}
+        {/* Immersive Background Layer - Scales and Blurs */}
         <motion.div 
-            style={{ scale: bgScale, originY: 0 }}
-            className="absolute top-0 left-0 right-0 h-[50vh] z-0 pointer-events-none will-change-transform"
+            style={{ scale: bgScale, originY: 0, filter: bgBlur }}
+            className="absolute top-0 left-0 right-0 h-[55vh] z-0 pointer-events-none will-change-transform"
         >
            <div className="absolute inset-0 bg-cover bg-top" style={{ backgroundImage: `url(${bgImage})` }} />
            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent" />
-           <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent h-40" />
+           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent h-40" />
         </motion.div>
         
-        <button onClick={onClose} className="absolute top-6 right-6 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center z-[410] text-white border border-white/5 active:scale-90 transition-transform hover:bg-white/10"><X size={20} /></button>
+        <button 
+            onClick={onClose} 
+            className="absolute right-6 w-11 h-11 bg-black/30 backdrop-blur-xl rounded-full flex items-center justify-center z-[410] text-white border border-white/10 active:scale-90 transition-transform hover:bg-white/10 shadow-lg"
+            style={{ top: 'calc(1.5rem + env(safe-area-inset-top))' }}
+        >
+            <X size={22} />
+        </button>
         
         <div 
             ref={scrollRef}
@@ -243,17 +249,17 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
             onTouchEnd={onTouchEnd}
             className="flex-1 overflow-y-auto relative z-10 no-scrollbar overscroll-y-contain"
         >
-           {/* Content Container - Moves down slightly (parallax) */}
            <motion.div 
              style={{ y: contentY }} 
              className="pt-[35vh] px-6 pb-32 space-y-8 will-change-transform"
            >
              <div className="flex gap-6 items-end">
-               <div className="relative w-32 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/10 bg-gray-900">
+               <div className="relative w-32 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/10 bg-gray-900 group">
                  <img src={movie.poster || FALLBACK_POSTER} className="w-full h-full object-cover" alt={movie.title} />
+                 <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-2xl pointer-events-none" />
                </div>
                <div className="flex-1 pb-1">
-                  <h2 className="text-3xl font-black mb-2 text-white leading-none tracking-tight drop-shadow-md">{movie.title}</h2>
+                  <h2 className="text-3xl font-black mb-2 text-white leading-tight tracking-tight drop-shadow-2xl">{movie.title}</h2>
                   <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     <span>{movie.year}</span>
                     <span className="w-1 h-1 bg-gray-600 rounded-full" />
@@ -272,10 +278,10 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                 ].map((btn, i) => (
                   <button key={i} onClick={btn.action} className={`flex flex-col items-center justify-center py-3 rounded-2xl border transition-all active:scale-95 backdrop-blur-xl ${
                     btn.dark 
-                      ? 'bg-white/90 text-black border-transparent shadow-lg hover:bg-white' 
+                      ? 'bg-white text-black border-transparent shadow-xl hover:bg-gray-100' 
                       : btn.active 
-                        ? 'bg-[#6B46C1]/90 text-white border-transparent shadow-lg shadow-purple-500/20' 
-                        : 'bg-black/40 text-gray-300 border-white/10 hover:bg-black/60 shadow-md'
+                        ? 'bg-[#6B46C1] text-white border-transparent shadow-xl shadow-purple-500/20' 
+                        : 'bg-white/5 text-gray-300 border-white/5 hover:bg-white/10 shadow-md'
                   }`}>
                     <btn.icon size={18} fill={btn.active && btn.fill !== false ? "currentColor" : "none"} />
                     <span className="text-[7px] font-black mt-1.5 uppercase tracking-widest">{btn.label}</span>
@@ -283,12 +289,11 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                 ))}
               </div>
 
-              <p className="text-sm font-medium leading-relaxed text-gray-300">{movie.description}</p>
+              <p className="text-sm font-medium leading-relaxed text-gray-300 opacity-90">{movie.description}</p>
 
-              {/* Where to Watch Section */}
               {movie.streamingPlatforms && movie.streamingPlatforms.length > 0 && (
                 <div className="space-y-4">
-                  <h4 className="text-[9px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+                  <h4 className="text-[9px] font-black uppercase tracking-widest text-white/30 flex items-center gap-2">
                     <MonitorPlay size={10} /> WHERE TO WATCH
                   </h4>
                   <div className="flex gap-3 overflow-x-auto pb-2 -mx-6 px-6 no-scrollbar">
@@ -313,13 +318,13 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
               )}
 
               <div className="space-y-4">
-                <h4 className="text-[9px] font-black uppercase tracking-widest text-white/40">CAST & CREW</h4>
+                <h4 className="text-[9px] font-black uppercase tracking-widest text-white/30">CAST & CREW</h4>
                 <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar">
                   {movie.cast.map((c: any, i: number) => (
                     <div 
                       key={i} 
                       onClick={() => onSelectPerson(c.name || c)} 
-                      className="flex-shrink-0 flex items-center gap-3 bg-black/40 backdrop-blur-xl pr-4 p-1.5 rounded-full border border-white/10 active:scale-95 transition-transform cursor-pointer hover:bg-black/60 shadow-sm"
+                      className="flex-shrink-0 flex items-center gap-3 bg-white/[0.03] backdrop-blur-xl pr-4 p-1.5 rounded-full border border-white/10 active:scale-95 transition-transform cursor-pointer hover:bg-white/[0.08] shadow-sm"
                     >
                       {c.profile ? (
                         <img src={c.profile} className="w-9 h-9 rounded-full object-cover" alt={c.name} loading="lazy" />
@@ -338,10 +343,10 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
               {movie.type === 'show' && movie.seasons && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-[9px] font-black uppercase tracking-widest text-white/40">EPISODES</h4>
+                    <h4 className="text-[9px] font-black uppercase tracking-widest text-white/30">EPISODES</h4>
                     <div className="flex gap-1">
                       {movie.seasons.map((s: Season) => (
-                        <button key={s.number} onClick={() => setActiveSeason(s.number)} className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${activeSeason === s.number ? 'bg-[#6B46C1] text-white' : 'bg-white/5 text-gray-500 hover:text-white'}`}>{s.number}</button>
+                        <button key={s.number} onClick={() => setActiveSeason(s.number)} className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${activeSeason === s.number ? 'bg-[#6B46C1] text-white shadow-lg' : 'bg-white/5 text-gray-500 hover:text-white'}`}>{s.number}</button>
                       ))}
                     </div>
                   </div>
@@ -350,7 +355,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                       const epId = `${movie.id}-S${activeSeason}-E${ep.number}`; 
                       const isEpWatched = watchedEpisodes.includes(epId); 
                       return (
-                        <div key={ep.id} onClick={() => setSelectedEpisode(ep)} className={`flex items-center gap-4 p-3 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 cursor-pointer hover:bg-black/60 transition-colors shadow-sm ${isEpWatched ? 'opacity-50' : ''}`}>
+                        <div key={ep.id} onClick={() => setSelectedEpisode(ep)} className={`flex items-center gap-4 p-3 rounded-2xl bg-white/[0.02] backdrop-blur-xl border border-white/5 cursor-pointer hover:bg-white/[0.05] transition-colors shadow-sm ${isEpWatched ? 'opacity-40' : ''}`}>
                           <div className="relative w-20 h-12 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0">
                             <img src={ep.thumbnail || movie.poster} className="w-full h-full object-cover" loading="lazy" />
                           </div>
@@ -388,16 +393,21 @@ export const PersonModal = memo(({ name, onClose, onSelectMovie }: any) => {
 
   return (
     <motion.div initial="initial" animate="animate" exit="exit" variants={modalOverlay} className="fixed inset-0 z-[450] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-hidden">
-      <motion.div variants={modalContent} className="bg-[#0F0F0F] w-full max-xl max-h-[85vh] rounded-[2rem] overflow-hidden flex flex-col relative border border-white/10 shadow-2xl">
-        <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center z-[460] text-white active:scale-90 transition-transform hover:bg-white/20"><X size={20} /></button>
+      <motion.div variants={modalContent} className="bg-[#0F0F0F] w-full max-xl max-h-[85vh] rounded-[2.5rem] overflow-hidden flex flex-col relative border border-white/10 shadow-2xl">
+        <button 
+            onClick={onClose} 
+            className="absolute top-6 right-6 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center z-[460] text-white active:scale-90 transition-transform hover:bg-white/20 shadow-lg"
+        >
+            <X size={20} />
+        </button>
         {loading ? <div className="flex-1 flex items-center justify-center min-h-[300px]"><Loader2 className="animate-spin text-[#6B46C1]" size={32} /></div> : person && (
           <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
             <div className="flex flex-col items-center text-center mb-8">
-              <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-2 border-white/10 mb-4 shadow-xl bg-gray-900">
+              <div className="w-28 h-28 rounded-[2.5rem] overflow-hidden border-2 border-white/10 mb-5 shadow-2xl bg-gray-900">
                 <img src={person.photo || FALLBACK_POSTER} className="w-full h-full object-cover" />
               </div>
-              <h2 className="text-2xl font-black text-white tracking-tight">{person.name}</h2>
-              <p className="text-[#6B46C1] font-bold text-[10px] uppercase tracking-widest mt-1">{person.role}</p>
+              <h2 className="text-2xl font-black text-white tracking-tight leading-none">{person.name}</h2>
+              <p className="text-[#6B46C1] font-bold text-[10px] uppercase tracking-widest mt-2">{person.role}</p>
             </div>
             
             <p className={`text-sm text-gray-400 mb-2 leading-relaxed ${isBioExpanded ? '' : 'line-clamp-4'}`}>
@@ -414,7 +424,7 @@ export const PersonModal = memo(({ name, onClose, onSelectMovie }: any) => {
 
             {!isLongBio && <div className="mb-6"></div>}
 
-            <h4 className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-4">KNOWN FOR</h4>
+            <h4 className="text-[9px] font-black uppercase tracking-widest text-white/20 mb-4">KNOWN FOR</h4>
             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-8 px-8">
               {person.knownFor.map((m: any) => (<MovieCard key={m.id} movie={m} onClick={() => { onSelectMovie(m); onClose(); }} />))}
             </div>
