@@ -205,7 +205,13 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                    { icon: Heart, label: 'FAV', active: isFav, action: handleToggleFav, fill: true },
                    { icon: PlayCircle, label: 'TRAILER', active: true, action: () => onPlayTrailer(movie), dark: true, fill: false }
                 ].map((btn, i) => (
-                  <button key={i} onClick={btn.action} className={`flex flex-col items-center justify-center py-3 rounded-2xl border transition-all active:scale-95 ${btn.dark ? 'bg-white text-black border-transparent shadow-lg' : btn.active ? 'bg-[#6B46C1] text-white border-transparent' : 'bg-white/5 text-gray-400 border-white/5 hover:bg-white/10'}`}>
+                  <button key={i} onClick={btn.action} className={`flex flex-col items-center justify-center py-3 rounded-2xl border transition-all active:scale-95 backdrop-blur-xl ${
+                    btn.dark 
+                      ? 'bg-white/90 text-black border-transparent shadow-lg hover:bg-white' 
+                      : btn.active 
+                        ? 'bg-[#6B46C1]/90 text-white border-transparent shadow-lg shadow-purple-500/20' 
+                        : 'bg-black/40 text-gray-300 border-white/10 hover:bg-black/60 shadow-md'
+                  }`}>
                     <btn.icon size={18} fill={btn.active && btn.fill !== false ? "currentColor" : "none"} />
                     <span className="text-[7px] font-black mt-1.5 uppercase tracking-widest">{btn.label}</span>
                   </button>
@@ -248,7 +254,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                     <div 
                       key={i} 
                       onClick={() => onSelectPerson(c.name || c)} 
-                      className="flex-shrink-0 flex items-center gap-3 bg-[#1A1A1A] pr-4 p-1.5 rounded-full border border-white/10 active:scale-95 transition-transform cursor-pointer hover:border-white/20"
+                      className="flex-shrink-0 flex items-center gap-3 bg-black/40 backdrop-blur-xl pr-4 p-1.5 rounded-full border border-white/10 active:scale-95 transition-transform cursor-pointer hover:bg-black/60 shadow-sm"
                     >
                       {c.profile ? (
                         <img src={c.profile} className="w-9 h-9 rounded-full object-cover" alt={c.name} loading="lazy" />
@@ -279,7 +285,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                       const epId = `${movie.id}-S${activeSeason}-E${ep.number}`; 
                       const isEpWatched = watchedEpisodes.includes(epId); 
                       return (
-                        <div key={ep.id} onClick={() => setSelectedEpisode(ep)} className={`flex items-center gap-4 p-3 rounded-2xl bg-white/[0.02] border border-white/5 cursor-pointer active:bg-white/5 transition-colors ${isEpWatched ? 'opacity-50' : ''}`}>
+                        <div key={ep.id} onClick={() => setSelectedEpisode(ep)} className={`flex items-center gap-4 p-3 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 cursor-pointer hover:bg-black/60 transition-colors shadow-sm ${isEpWatched ? 'opacity-50' : ''}`}>
                           <div className="relative w-20 h-12 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0">
                             <img src={ep.thumbnail || movie.poster} className="w-full h-full object-cover" loading="lazy" />
                           </div>

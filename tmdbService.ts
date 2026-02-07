@@ -5,10 +5,51 @@ const API_KEY = process.env.TMDB_API_KEY || '717d9fe49eec21ec222a75e01c58e79c';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w780';
+const BACKDROP_BASE = 'https://image.tmdb.org/t/p/original'; // HD Quality for Hero
 const PROFILE_BASE = 'https://image.tmdb.org/t/p/w185';
 
-const GENRE_MAP: Record<string, number> = {
-  'Action': 28, 'Comedy': 35, 'Horror': 27, 'Drama': 18, 'Sci-Fi': 878, 'Animation': 16, 'Romance': 10749, 'Thriller': 53, 'Mystery': 9648
+// Smart mapping for genres across Movies (standard) and TV (often different IDs)
+const GENRE_MAP: Record<string, { movie: string; tv: string }> = {
+  'Action': { movie: '28', tv: '10759' }, // TV: Action & Adventure
+  'Comedy': { movie: '35', tv: '35' },
+  'Horror': { movie: '27', tv: '10765,9648' }, // TV: Sci-Fi & Fantasy + Mystery (closest proxy)
+  'Drama': { movie: '18', tv: '18' },
+  'Sci-Fi': { movie: '878', tv: '10765' }, // TV: Sci-Fi & Fantasy
+  'Animation': { movie: '16', tv: '16' },
+  'Romance': { movie: '10749', tv: '18,35' }, // TV: Drama + Comedy (RomComs)
+  'Thriller': { movie: '53', tv: '80,9648' }, // TV: Crime + Mystery
+  'Mystery': { movie: '9648', tv: '9648' }
+};
+
+const VIBE_MAP: Record<string, Record<string, string>> = {
+  'Movies that feel like a warm hug': { 
+    with_genres: '10751,35', // Family, Comedy
+    without_genres: '27,53,18', // No Horror, Thriller, Heavy Drama
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': '1000'
+  },
+  'Atmospheric mystery movies for a rainy night': { 
+    with_genres: '9648,53', // Mystery, Thriller
+    sort_by: 'popularity.desc',
+    'vote_average.gte': '7'
+  },
+  'Hard sci-fi movies set in deep space': { 
+    with_genres: '878', // Sci-Fi
+    with_keywords: '9882', // Space
+    sort_by: 'popularity.desc'
+  },
+  'Highly rated indie movies from the last 5 years': { 
+    'vote_average.gte': '7.5',
+    'vote_count.gte': '100',
+    'vote_count.lte': '4000',
+    'primary_release_date.gte': new Date(new Date().setFullYear(new Date().getFullYear() - 5)).toISOString().split('T')[0],
+    sort_by: 'vote_average.desc'
+  },
+  'Psychological thrillers with huge plot twists': { 
+    with_genres: '53,9648',
+    sort_by: 'revenue.desc', // Often popular ones have twists
+    'vote_count.gte': '2000'
+  }
 };
 
 export const hasApiKey = () => !!API_KEY && API_KEY !== 'YOUR_KEY_HERE';
@@ -30,7 +71,7 @@ const mapMovie = (m: any): Movie => ({
   rating: Number(m.vote_average?.toFixed(1)) || 0,
   type: m.media_type === 'tv' || m.name ? 'show' : 'movie',
   poster: m.poster_path ? `${IMAGE_BASE}${m.poster_path}` : '',
-  backdrop: m.backdrop_path ? `${IMAGE_BASE}${m.backdrop_path}` : undefined,
+  backdrop: m.backdrop_path ? `${BACKDROP_BASE}${m.backdrop_path}` : undefined,
   description: m.overview,
   genres: [], 
   director: 'Loading...', 
@@ -79,15 +120,57 @@ export const fetchRecommendations = async (likedTitles: string[], kidsMode: bool
 
 export const searchMovies = async (query: string, type: string = 'all', kidsMode: boolean = false, genreName?: string | null): Promise<Movie[]> => {
   try {
-    if (genreName && !query.trim()) {
-      const genreId = GENRE_MAP[genreName];
-      const endpoint = type === 'show' ? '/discover/tv' : '/discover/movie';
-      const params: Record<string, string> = { with_genres: genreId?.toString() || '', sort_by: 'popularity.desc' };
+    // 1. Check for specific Vibe Queries
+    if (VIBE_MAP[query]) {
+      const vibeParams = VIBE_MAP[query];
+      const params: Record<string, string> = { ...vibeParams, include_adult: 'false', language: 'en-US' };
       if (kidsMode) { params['certification_country'] = 'US'; params['certification.lte'] = 'PG-13'; }
-      const data = await fetchTMDB(endpoint, params);
-      return data?.results?.map((m: any) => ({ ...mapMovie(m), type: type === 'all' ? (endpoint === '/discover/tv' ? 'show' : 'movie') : (type as 'movie' | 'show') })) || [];
+      const data = await fetchTMDB('/discover/movie', params);
+      return data?.results?.map((m: any) => ({ ...mapMovie(m), type: 'movie' })) || [];
     }
 
+    // 2. Genre-based Search
+    if (genreName && !query.trim()) {
+      const genreIds = GENRE_MAP[genreName] || { movie: '', tv: '' };
+      const commonParams = { 
+        sort_by: 'popularity.desc', 
+        'vote_count.gte': '50', // Filter out very low interaction content
+        include_adult: 'false'
+      };
+      
+      if (kidsMode) { 
+        Object.assign(commonParams, { 'certification_country': 'US', 'certification.lte': 'PG-13' }); 
+      }
+
+      const promises = [];
+      
+      // If type is 'all' or 'movie', fetch movies
+      if (type === 'all' || type === 'movie') {
+        const p = { ...commonParams, with_genres: genreIds.movie };
+        promises.push(
+            fetchTMDB('/discover/movie', p).then(d => d?.results?.map((m: any) => ({ ...mapMovie(m), type: 'movie' })) || [])
+        );
+      }
+      
+      // If type is 'all' or 'show', fetch shows
+      if (type === 'all' || type === 'show') {
+         // Some TV genres map to multiple IDs or standard IDs
+         const p = { ...commonParams, with_genres: genreIds.tv };
+         if (genreIds.tv) {
+             promises.push(
+                fetchTMDB('/discover/tv', p).then(d => d?.results?.map((m: any) => ({ ...mapMovie(m), type: 'show' })) || [])
+             );
+         }
+      }
+
+      const results = await Promise.all(promises);
+      const combined = results.flat();
+      
+      // Sort combined results by popularity/rating to interleave them nicely
+      return combined.sort((a, b) => b.rating - a.rating).slice(0, 20);
+    }
+
+    // 3. Regular Text Search
     const params: Record<string, string> = { query, include_adult: 'false' };
     let endpoint = '/search/multi';
     if (type === 'movie') endpoint = '/search/movie';
