@@ -127,14 +127,11 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
   // Pull-to-zoom & Parallax Logic
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragY = useMotionValue(0);
-  // Use a spring for the value itself if we wanted input smoothing, 
-  // but for raw touch control, direct mapping is tighter.
-  // We use transforms to map raw drag to effects.
   
-  // Damped scale: grows slowly
-  const bgScale = useTransform(dragY, [0, 600], [1, 1.25]);
-  // Parallax Content: Moves down but slower than finger
-  const contentY = useTransform(dragY, [0, 600], [0, 150]);
+  // Damped scale: Increased intensity (1.45 max)
+  const bgScale = useTransform(dragY, [0, 600], [1, 1.45]);
+  // Parallax Content: Increased movement (200px max)
+  const contentY = useTransform(dragY, [0, 600], [0, 200]);
   
   const dragStartY = useRef(0);
   const isDragging = useRef(false);
