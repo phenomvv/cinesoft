@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, memo, useRef } from 'react';
-import { motion, AnimatePresence, Variants, useMotionValue, useTransform, animate } from 'framer-motion';
+import { motion, AnimatePresence, Variants, useMotionValue, useTransform, animate, useSpring } from 'framer-motion';
 import { 
   X, Star, Play, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon, MonitorPlay 
 } from 'lucide-react';
@@ -124,35 +124,58 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
   const [watchedEpisodes, setWatchedEpisodes] = useState<string[]>(user.watchedEpisodes || []);
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
 
-  // Pull-to-zoom logic
+  // Pull-to-zoom & Parallax Logic
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragY = useMotionValue(0);
-  const bgScale = useTransform(dragY, [0, 500], [1, 1.3]);
+  // Use a spring for the value itself if we wanted input smoothing, 
+  // but for raw touch control, direct mapping is tighter.
+  // We use transforms to map raw drag to effects.
+  
+  // Damped scale: grows slowly
+  const bgScale = useTransform(dragY, [0, 600], [1, 1.25]);
+  // Parallax Content: Moves down but slower than finger
+  const contentY = useTransform(dragY, [0, 600], [0, 150]);
+  
   const dragStartY = useRef(0);
+  const isDragging = useRef(false);
 
   const onTouchStart = (e: React.TouchEvent) => {
-    if (scrollRef.current && scrollRef.current.scrollTop <= 1) {
+    if (scrollRef.current && scrollRef.current.scrollTop <= 0) {
       dragStartY.current = e.touches[0].clientY;
+      isDragging.current = true;
     }
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    if (dragStartY.current === 0) return;
+    if (!isDragging.current) return;
+    
     const currentY = e.touches[0].clientY;
-    const delta = currentY - dragStartY.current;
+    const rawDelta = currentY - dragStartY.current;
 
-    // Only allow pull if delta > 0 (pulling down) and we are at the top
-    if (delta > 0 && scrollRef.current?.scrollTop! <= 1) {
-      dragY.set(delta);
+    // Only activate if pulling down at the very top
+    if (rawDelta > 0 && scrollRef.current?.scrollTop! <= 0) {
+      // Apply non-linear resistance (Rubber banding)
+      // The formula: damped = (delta * 0.4) is simple and effective.
+      // For more "premium" feel: damped = delta ^ 0.85
+      const damped = Math.pow(rawDelta, 0.85); 
+      dragY.set(damped);
+    } else if (rawDelta < 0 && dragY.get() > 0) {
+       // If dragging back up while extended, reduce dragY
+       // This handles the user changing mind mid-pull
+       dragY.set(Math.max(0, dragY.get() + rawDelta));
+       dragStartY.current = currentY; // Reset anchor to prevent jumps
     } else {
+      // Reset if scrolling down normal content
       dragY.set(0);
-      dragStartY.current = 0;
+      if (rawDelta < 0) isDragging.current = false;
     }
   };
 
   const onTouchEnd = () => {
+    isDragging.current = false;
     dragStartY.current = 0;
-    animate(dragY, 0, { type: "spring", stiffness: 300, damping: 30 });
+    // Smooth spring release
+    animate(dragY, 0, { type: "spring", stiffness: 200, damping: 20, mass: 0.5 });
   };
 
   useEffect(() => {
@@ -204,9 +227,10 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
           {selectedEpisode && <EpisodeDetailModal episode={selectedEpisode} seasonNumber={activeSeason} showTitle={movie.title} onClose={() => setSelectedEpisode(null)} isWatched={watchedEpisodes.includes(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} onToggleWatch={() => toggleEpisode(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} />}
         </AnimatePresence>
         
+        {/* Background Layer - Scales up */}
         <motion.div 
             style={{ scale: bgScale, originY: 0 }}
-            className="absolute top-0 left-0 right-0 h-[45vh] z-0 pointer-events-none"
+            className="absolute top-0 left-0 right-0 h-[50vh] z-0 pointer-events-none will-change-transform"
         >
            <div className="absolute inset-0 bg-cover bg-top" style={{ backgroundImage: `url(${bgImage})` }} />
            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent" />
@@ -222,7 +246,11 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
             onTouchEnd={onTouchEnd}
             className="flex-1 overflow-y-auto relative z-10 no-scrollbar overscroll-y-contain"
         >
-           <div className="pt-[35vh] px-6 pb-32 space-y-8">
+           {/* Content Container - Moves down slightly (parallax) */}
+           <motion.div 
+             style={{ y: contentY }} 
+             className="pt-[35vh] px-6 pb-32 space-y-8 will-change-transform"
+           >
              <div className="flex gap-6 items-end">
                <div className="relative w-32 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl flex-shrink-0 border border-white/10 bg-gray-900">
                  <img src={movie.poster || FALLBACK_POSTER} className="w-full h-full object-cover" alt={movie.title} />
@@ -342,7 +370,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                   </div>
                 </div>
               )}
-           </div>
+           </motion.div>
         </div>
       </motion.div>
     </motion.div>
