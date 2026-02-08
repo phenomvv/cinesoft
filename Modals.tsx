@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, memo, useRef } from 'react';
+import React, { useState, useEffect, memo, useRef, useMemo } from 'react';
 import { motion, AnimatePresence, Variants, useMotionValue, useTransform, animate, useSpring, useScroll } from 'framer-motion';
 import { 
   X, Star, Play, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon, MonitorPlay, Bell, BellRing
@@ -184,6 +184,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const episodesScrollRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll({ container: scrollRef });
   const bgBlur = useTransform(scrollY, [0, 300], ["blur(0px)", "blur(40px)"]);
   
@@ -248,12 +249,34 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
     onShowToast(!isFav ? "Added to Favorites" : "Removed from Favorites");
   };
 
-  const toggleEpisode = (epId: string) => {
+  const toggleEpisode = (epId: string, index: number) => {
     const isNowWatched = !watchedEpisodes.includes(epId);
-    triggerHaptic(isNowWatched ? 'light' : 'light');
+    triggerHaptic(isNowWatched ? 'medium' : 'light');
     const updated = isNowWatched ? [...watchedEpisodes, epId] : watchedEpisodes.filter(id => id !== epId);
     setWatchedEpisodes(updated);
     setUser({ ...user, watchedEpisodes: updated });
+
+    // "Thumb-Steady" Scroll logic:
+    // Move the next episode card into the exact visual position where the user just tapped.
+    if (isNowWatched && episodesScrollRef.current) {
+        const container = episodesScrollRef.current;
+        const children = container.children;
+        const nextIndex = index + 1;
+        
+        if (nextIndex < children.length) {
+            const currentElement = children[index] as HTMLElement;
+            const nextElement = children[nextIndex] as HTMLElement;
+            
+            // Calculate where the element currently is relative to the scroll viewport
+            const visualLeft = currentElement.offsetLeft - container.scrollLeft;
+            
+            setTimeout(() => {
+                // New scrollLeft should make nextElement.offsetLeft - newScrollLeft === visualLeft
+                const targetX = nextElement.offsetLeft - visualLeft;
+                container.scrollTo({ left: targetX, behavior: 'smooth' });
+            }, 40); // Slightly faster delay for more "responsive" feel
+        }
+    }
   };
 
   const handleWatchlist = () => {
@@ -275,10 +298,25 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
   };
 
   const handleRate = (rating: number) => {
-    // Already has haptic from StarRating component
     onRateMovie(movie.id, rating);
     onShowToast(`Rated ${rating} stars!`);
   };
+
+  // Memoized season progress calculations
+  const seasonProgress = useMemo(() => {
+    if (movie.type !== 'show' || !movie.seasons) return {};
+    const stats: Record<number, number> = {};
+    movie.seasons.forEach(s => {
+      const total = s.episodes.length;
+      if (total === 0) {
+        stats[s.number] = 0;
+        return;
+      }
+      const watchedCount = watchedEpisodes.filter(id => id.startsWith(`${movie.id}-S${s.number}-E`)).length;
+      stats[s.number] = (watchedCount / total) * 100;
+    });
+    return stats;
+  }, [movie.id, movie.seasons, watchedEpisodes]);
 
   const currentSeason = movie.seasons?.find((s: Season) => s.number === activeSeason);
   const bgImage = movie.backdrop || movie.poster;
@@ -291,7 +329,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
         className="bg-[#0A0A0A] w-full max-w-2xl h-[100dvh] sm:h-[90vh] sm:rounded-[2rem] rounded-none overflow-hidden flex flex-col relative shadow-2xl border border-white/5"
       >
         <AnimatePresence>
-          {selectedEpisode && <EpisodeDetailModal episode={selectedEpisode} seasonNumber={activeSeason} showTitle={movie.title} onClose={() => setSelectedEpisode(null)} isWatched={watchedEpisodes.includes(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} onToggleWatch={() => toggleEpisode(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} />}
+          {selectedEpisode && <EpisodeDetailModal episode={selectedEpisode} seasonNumber={activeSeason} showTitle={movie.title} onClose={() => setSelectedEpisode(null)} isWatched={watchedEpisodes.includes(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`)} onToggleWatch={() => toggleEpisode(`${movie.id}-S${activeSeason}-E${selectedEpisode.number}`, currentSeason?.episodes.findIndex(e => e.id === selectedEpisode.id) ?? 0)} />}
         </AnimatePresence>
         
         <motion.div 
@@ -318,7 +356,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
-            className="flex-1 overflow-y-auto relative z-10 no-scrollbar overscroll-y-contain"
+            className="flex-1 overflow-y-auto overflow-x-hidden relative z-10 no-scrollbar overscroll-y-contain"
         >
            <motion.div 
              style={{ y: contentY }} 
@@ -471,23 +509,44 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                 <motion.div layout className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[9px] font-black uppercase tracking-widest text-white/40">EPISODES</h4>
-                    <div className="flex gap-1">
-                      {movie.seasons.map((s: Season) => (
-                        <button 
-                          key={s.number} 
-                          onClick={() => {
-                            triggerHaptic('light');
-                            setActiveSeason(s.number);
-                          }} 
-                          className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${activeSeason === s.number ? 'bg-[#6B46C1] text-white' : 'bg-white/5 text-gray-500 hover:text-white'}`}
-                        >
-                          {s.number}
-                        </button>
-                      ))}
+                    <div className="flex gap-3">
+                      {movie.seasons.map((s: Season) => {
+                        const progress = seasonProgress[s.number] || 0;
+                        const isComplete = progress === 100;
+                        return (
+                          <div key={s.number} className="flex flex-col items-center gap-1.5">
+                            <button 
+                              onClick={() => {
+                                triggerHaptic('light');
+                                setActiveSeason(s.number);
+                              }} 
+                              className={`w-10 h-10 rounded-xl text-[10px] font-black transition-all border ${
+                                activeSeason === s.number 
+                                  ? 'bg-[#6B46C1] text-white border-transparent shadow-lg shadow-purple-900/30' 
+                                  : 'bg-white/5 text-gray-500 border-white/5 hover:text-white'
+                              }`}
+                            >
+                              {s.number}
+                            </button>
+                            {/* Season Progress Bar */}
+                            <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                                <motion.div 
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${progress}%` }}
+                                    transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                                    className={`h-full rounded-full ${isComplete ? 'bg-emerald-500' : 'bg-[#6B46C1]'}`} 
+                                />
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                  <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar">
-                    {currentSeason?.episodes.map((ep: Episode) => { 
+                  <div 
+                    ref={episodesScrollRef}
+                    className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar scroll-smooth"
+                  >
+                    {currentSeason?.episodes.map((ep: Episode, index: number) => { 
                       const epId = `${movie.id}-S${activeSeason}-E${ep.number}`; 
                       const isEpWatched = watchedEpisodes.includes(epId); 
                       return (
@@ -503,7 +562,10 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                              <img src={ep.thumbnail || movie.poster} className="w-full h-full object-cover" loading="lazy" />
                              <div className="absolute top-2 right-2 z-20">
                                <button 
-                                  onClick={(e) => { e.stopPropagation(); toggleEpisode(epId); }} 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    toggleEpisode(epId, index); 
+                                  }} 
                                   className={`w-8 h-8 rounded-full flex items-center justify-center transition-all backdrop-blur-md shadow-lg ${isEpWatched ? 'bg-[#6B46C1] text-white' : 'bg-black/40 text-white/40 border border-white/10 hover:border-white/30'}`}
                                 >
                                   <Check size={14} strokeWidth={isEpWatched ? 3 : 2} />
