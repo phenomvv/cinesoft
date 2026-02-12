@@ -4,19 +4,21 @@ import { Check, Bookmark, Star, Calendar } from 'lucide-react';
 import { Movie } from '../../types';
 import { triggerHaptic, getCommunityRating, FALLBACK_POSTER } from '../../utils';
 
+interface MovieCardProps {
+  movie: Movie;
+  onClick: () => void;
+  isWatched?: boolean;
+  isInWatchlist?: boolean;
+  fullWidth?: boolean;
+}
+
 export const MovieCard = memo(({ 
   movie, 
   onClick, 
   isWatched, 
   isInWatchlist, 
-  fullWidth 
-}: { 
-  movie: Movie; 
-  onClick: () => void; 
-  isWatched?: boolean; 
-  isInWatchlist?: boolean;
-  fullWidth?: boolean; 
-}) => {
+  fullWidth
+}: MovieCardProps) => {
   const [imgSrc, setImgSrc] = useState(movie.poster || FALLBACK_POSTER);
   
   const isUnreleased = movie.releaseDate ? new Date(movie.releaseDate) > new Date() : false;
@@ -64,7 +66,8 @@ export const MovieCard = memo(({
             </div>
         )}
       </div>
-      <div className="mt-2.5 px-1">
+      
+      <div className="mt-2.5 px-1 relative z-30">
         <h3 className="text-xs font-bold truncate text-gray-100 group-hover:text-[#6B46C1] transition-colors">{movie.title}</h3>
         <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest flex items-center gap-1">
           {movie.year} {movie.type === 'show' && <span className="text-[8px] bg-white/10 px-1 rounded text-white/50">TV</span>}

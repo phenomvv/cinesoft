@@ -6,10 +6,22 @@ import { MovieCard } from '../components/movie/MovieCard';
 import { SkeletonCard } from '../components/ui/Common';
 import * as GeminiAPI from '../services/gemini';
 import * as TmdbAPI from '../services/tmdb';
+import { Movie } from '../types';
 
 const API = TmdbAPI.hasApiKey() ? TmdbAPI : GeminiAPI;
 
-export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, anticipatedM, recommendations, loading, user, onPlayTrailer }: any) => {
+interface HomePageProps {
+  onSelectMovie: (movie: Movie) => void;
+  trendingM: Movie[];
+  trendingS: Movie[];
+  anticipatedM: Movie[];
+  recommendations: Movie[];
+  loading: boolean;
+  user: any;
+  onPlayTrailer: (movie: Movie) => void;
+}
+
+export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, anticipatedM, recommendations, loading, user, onPlayTrailer }: HomePageProps) => {
   const [heroIndex, setHeroIndex] = useState(0);
   const [featuredLogos, setFeaturedLogos] = useState<Record<string, string>>({});
   
@@ -31,7 +43,7 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, anticipated
     }
     if (featuredLogos[featured.id]) return;
 
-    API.fetchMovieDetails(featured.id, featured.type).then(details => {
+    API.fetchMovieDetails(featured.id, featured.type).then((details: any) => {
         if (details?.logo) {
             setFeaturedLogos(prev => ({ ...prev, [featured.id]: details.logo! }));
         }
@@ -41,8 +53,8 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, anticipated
   const activeLogo = featured ? featuredLogos[featured.id] : undefined;
 
   const sections = [
-    { title: "Top 10 Movies Today", data: trendingM.slice(0, 10), icon: TrendingUp, ranked: true },
-    { title: "Top 10 Shows Today", data: trendingS.slice(0, 10), icon: TrendingUp, ranked: true },
+    { title: "Top 10 Movies Today", data: trendingM.slice(0, 10), icon: TrendingUp },
+    { title: "Top 10 Shows Today", data: trendingS.slice(0, 10), icon: TrendingUp },
     { title: "Anticipated Releases", data: anticipatedM, icon: CalendarDays, highlighted: true },
     { title: "Trending Now", data: trendingM.slice(10), icon: Film }, 
     { title: "Popular Shows", data: trendingS.slice(10), icon: Tv }, 
@@ -136,7 +148,6 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, anticipated
                         onClick={() => onSelectMovie(m)} 
                         isWatched={user?.watched.includes(m.id)} 
                         isInWatchlist={user?.watchlist.some((w: any) => w.id === m.id)}
-                        rank={sec.ranked ? i + 1 : undefined}
                     />
                 ))}
             </div>
