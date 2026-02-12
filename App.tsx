@@ -7,7 +7,6 @@ import { Movie, User } from './types';
 import * as GeminiAPI from './services/gemini';
 import * as TmdbAPI from './services/tmdb';
 
-// New Imports
 import { GlobalHeader, BottomNav } from './components/layout/Navigation';
 import { Toast } from './components/ui/Common';
 import { LandingPage } from './pages/Landing';
@@ -32,7 +31,6 @@ const DEFAULT_USER: User = {
   notificationIds: []
 };
 
-// Lazy load from new locations
 const HomePage = lazy(() => import('./pages/Home').then(m => ({ default: m.HomePage })));
 const ExplorePage = lazy(() => import('./pages/Explore').then(m => ({ default: m.ExplorePage })));
 const LibraryPage = lazy(() => import('./pages/Library').then(m => ({ default: m.LibraryPage })));
@@ -66,47 +64,40 @@ const App = () => {
   const showToast = (message: string) => setToast(message);
 
   const handleLogin = (type: 'google' | 'email') => {
-    // Simulate Login
     const newUser = {
       ...DEFAULT_USER,
-      name: type === 'google' ? 'Alex Chen' : 'Alex Chen',
+      name: 'Alex Chen',
       email: type === 'google' ? 'alex.c@gmail.com' : 'alex@email.com',
       avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200',
     };
     setUser(newUser);
   };
 
-  const handleGuest = () => {
-    setUser(DEFAULT_USER);
-  };
+  const handleGuest = () => setUser(DEFAULT_USER);
 
   const handlePlayTrailer = async (movie: Movie) => {
     if (movie.trailerUrl) {
       setActiveTrailerUrl(movie.trailerUrl);
       return;
     }
-    
     try {
       const details = await API.fetchMovieDetails(movie.id, movie.type);
       if (details?.trailerUrl) {
         setActiveTrailerUrl(details.trailerUrl);
       } else {
-        showToast("Trailer not available for this title");
+        showToast("Trailer not available");
       }
-    } catch (err) {
+    } catch {
       showToast("Error loading trailer");
     }
   };
   
   useEffect(() => { 
-    if (user) {
-      localStorage.setItem('cinesoft_user', JSON.stringify(user)); 
-    }
+    if (user) localStorage.setItem('cinesoft_user', JSON.stringify(user)); 
   }, [user]);
   
   useEffect(() => { 
     if (!user) return;
-    
     let mounted = true;
     const loadHomeData = async () => { 
       setLoading(true); 
@@ -123,11 +114,7 @@ const App = () => {
           setRecommendations(r || []); 
           setAnticipatedMovies(a || []);
         }
-      } catch (err) {
-        console.error("Data load failed", err);
-      } finally { 
-        if (mounted) setLoading(false); 
-      } 
+      } finally { if (mounted) setLoading(false); } 
     }; 
     loadHomeData(); 
     return () => { mounted = false; };
@@ -155,37 +142,25 @@ const App = () => {
   const onToggleFavorite = (movie: Movie) => setUser(prev => {
     if (!prev) return prev;
     const exists = prev.favoriteMovieIds.includes(movie.id);
-    const updatedIds = exists 
-      ? prev.favoriteMovieIds.filter((id: string) => id !== movie.id) 
-      : [...prev.favoriteMovieIds, movie.id];
-    const updatedList = exists 
-      ? prev.favorites.filter((m: Movie) => m.id !== movie.id) 
-      : [...prev.favorites, movie];
-    return { ...prev, favoriteMovieIds: updatedIds, favorites: updatedList };
+    return { 
+      ...prev, 
+      favoriteMovieIds: exists ? prev.favoriteMovieIds.filter(id => id !== movie.id) : [...prev.favoriteMovieIds, movie.id],
+      favorites: exists ? prev.favorites.filter(m => m.id !== movie.id) : [...prev.favorites, movie]
+    };
   });
 
   const onToggleNotification = (movie: Movie) => setUser(prev => {
     if (!prev) return prev;
     const exists = prev.notificationIds?.includes(movie.id);
-    const updatedIds = exists 
-      ? prev.notificationIds.filter((id: string) => id !== movie.id) 
-      : [...(prev.notificationIds || []), movie.id];
-    return { ...prev, notificationIds: updatedIds };
+    return { ...prev, notificationIds: exists ? prev.notificationIds.filter(id => id !== movie.id) : [...(prev.notificationIds || []), movie.id] };
   });
 
-  const onRateMovie = (movieId: string, rating: number) => {
-    setUser(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        userRatings: { ...prev.userRatings, [movieId]: rating }
-      };
-    });
-  };
+  const onRateMovie = (movieId: string, rating: number) => setUser(prev => {
+    if (!prev) return prev;
+    return { ...prev, userRatings: { ...prev.userRatings, [movieId]: rating } };
+  });
 
-  if (!user) {
-    return <LandingPage onLogin={handleLogin} onGuest={handleGuest} />;
-  }
+  if (!user) return <LandingPage onLogin={handleLogin} onGuest={handleGuest} />;
 
   return (
     <div className="min-h-screen font-sans bg-[#050505] text-[#F5F5F5]">
@@ -207,46 +182,20 @@ const App = () => {
             </Routes>
           </Suspense>
         </motion.div>
-        
         <BottomNav />
-        
-        <AnimatePresence>
-          {toast && <Toast message={toast} onClose={() => setToast(null)} />}
-        </AnimatePresence>
-
+        <AnimatePresence>{toast && <Toast message={toast} onClose={() => setToast(null)} />}</AnimatePresence>
         <Suspense fallback={null}>
           <AnimatePresence>
             {selectedMovie && (
               <MovieDetailModal 
-                movie={selectedMovie} 
-                onClose={() => setSelectedMovie(null)} 
-                user={user} 
-                setUser={setUser} 
-                onToggleWatchlist={onToggleWatchlist} 
-                onToggleWatched={onToggleWatched} 
-                onToggleFavorite={onToggleFavorite}
-                onToggleNotification={onToggleNotification}
-                onRateMovie={onRateMovie}
-                onSelectPerson={setSelectedPerson} 
-                onSelectMovie={setSelectedMovie}
-                onPlayTrailer={handlePlayTrailer}
-                onShowToast={showToast} 
+                movie={selectedMovie} onClose={() => setSelectedMovie(null)} 
+                user={user} setUser={setUser} onToggleWatchlist={onToggleWatchlist} onToggleWatched={onToggleWatched} 
+                onToggleFavorite={onToggleFavorite} onToggleNotification={onToggleNotification} onRateMovie={onRateMovie}
+                onSelectPerson={setSelectedPerson} onSelectMovie={setSelectedMovie} onPlayTrailer={handlePlayTrailer} onShowToast={showToast} 
               />
             )}
-            {selectedPerson && (
-              <PersonModal 
-                name={selectedPerson} 
-                onClose={() => setSelectedPerson(null)} 
-                onSelectMovie={setSelectedMovie} 
-                user={user} 
-              />
-            )}
-            {activeTrailerUrl && (
-              <VideoModal 
-                url={activeTrailerUrl} 
-                onClose={() => setActiveTrailerUrl(null)} 
-              />
-            )}
+            {selectedPerson && <PersonModal name={selectedPerson} onClose={() => setSelectedPerson(null)} onSelectMovie={setSelectedMovie} user={user} />}
+            {activeTrailerUrl && <VideoModal url={activeTrailerUrl} onClose={() => setActiveTrailerUrl(null)} />}
           </AnimatePresence>
         </Suspense>
       </HashRouter>

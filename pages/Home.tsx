@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Play, Film, Tv, Sparkles, CalendarDays, TrendingUp } from 'lucide-react';
@@ -24,17 +25,12 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, anticipated
 
   useEffect(() => {
     if (!featured) return;
-    
-    // If we already have the logo in the movie object, cache it
     if (featured.logo) {
         setFeaturedLogos(prev => ({ ...prev, [featured.id]: featured.logo! }));
         return;
     }
-    
-    // If we already fetched it, don't fetch again
     if (featuredLogos[featured.id]) return;
 
-    // Fetch logo from API
     API.fetchMovieDetails(featured.id, featured.type).then(details => {
         if (details?.logo) {
             setFeaturedLogos(prev => ({ ...prev, [featured.id]: details.logo! }));
@@ -45,9 +41,9 @@ export const HomePage = memo(({ onSelectMovie, trendingM, trendingS, anticipated
   const activeLogo = featured ? featuredLogos[featured.id] : undefined;
 
   const sections = [
-    { title: "Anticipated Releases", data: anticipatedM, icon: CalendarDays, highlighted: true },
     { title: "Top 10 Movies Today", data: trendingM.slice(0, 10), icon: TrendingUp, ranked: true },
     { title: "Top 10 Shows Today", data: trendingS.slice(0, 10), icon: TrendingUp, ranked: true },
+    { title: "Anticipated Releases", data: anticipatedM, icon: CalendarDays, highlighted: true },
     { title: "Trending Now", data: trendingM.slice(10), icon: Film }, 
     { title: "Popular Shows", data: trendingS.slice(10), icon: Tv }, 
     { title: "For You", data: recommendations, icon: Sparkles, curated: true } 

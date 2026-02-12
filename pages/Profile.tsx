@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -42,7 +43,7 @@ export const ProfilePage = memo(({ user, setUser, onSelectMovie }: any) => {
   ];
 
   return (
-    <div className="pt-28 px-6 pb-12 max-w-xl mx-auto w-full min-h-screen bg-[#050505] overflow-x-hidden">
+    <div className="pt-28 px-6 pb-24 max-w-xl mx-auto w-full min-h-screen bg-[#050505] overflow-x-hidden">
         {/* Settings Gear */}
         <button 
             onClick={() => {
@@ -94,7 +95,7 @@ export const ProfilePage = memo(({ user, setUser, onSelectMovie }: any) => {
         {/* Achievements Bento Box */}
         <motion.div 
             initial="hidden" animate="visible" custom={3} variants={staggerVariants}
-            className="mb-8"
+            className="mb-10"
         >
             <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">ACHIEVEMENTS</h3>
             <div className="flex items-center justify-between bg-[#0A0A0A] border border-white/10 rounded-[2rem] p-6 shadow-xl gap-4">
@@ -115,7 +116,7 @@ export const ProfilePage = memo(({ user, setUser, onSelectMovie }: any) => {
         {/* Favorite Movies Bento Box */}
         <motion.div 
             initial="hidden" animate="visible" custom={4} variants={staggerVariants}
-            className="mb-4"
+            className="mb-8"
         >
             <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-1">FAVORITE MOVIES</h3>
             <div className="grid grid-cols-3 gap-3 mb-6">

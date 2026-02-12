@@ -28,7 +28,7 @@ export interface Movie {
   type: 'movie' | 'show';
   poster: string;
   backdrop?: string;
-  logo?: string; // stylized title logo
+  logo?: string; 
   description: string;
   genres: string[];
   director: string;
@@ -71,12 +71,4 @@ export interface User {
   userRatings: Record<string, number>;
   favoriteMovieIds: string[];
   notificationIds: string[];
-}
-
-export type Theme = 'light' | 'dark';
-
-export interface AppState {
-  theme: Theme;
-  user: User | null;
-  movies: Movie[];
 }
