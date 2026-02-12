@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Movie, Person, Season } from "./types";
+import { Movie, Person, Season } from "../types";
 
 const apiKey = process.env.API_KEY;
 let ai: GoogleGenAI | null = null;
@@ -154,6 +154,10 @@ export const fetchRecommendations = (likedTitles: string[], kidsMode: boolean = 
     ? `The user enjoys: ${likedTitles.join(", ")}. Based on this, suggest 8 unique and highly rated movies or shows they haven't seen yet. Focus on similar genres and high production quality.`
     : "Suggest 8 top-tier, critically acclaimed movies and shows from various genres for a new user.";
   return fetchList(context, kidsMode);
+};
+
+export const fetchSimilarMovies = (title: string, kidsMode: boolean = false) => {
+  return fetchList(`Search for exactly 6 movies or shows that are highly similar to "${title}" in terms of plot themes, emotional tone, and visual style. Focus on titles that fans of "${title}" would genuinely appreciate for their artistic and thematic qualities. Return JSON.`, kidsMode);
 };
 
 export const searchMovies = (query: string, typeFilter: string = 'all', kidsMode: boolean = false) => {

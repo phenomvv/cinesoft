@@ -1,13 +1,14 @@
-
 import React, { useState, useEffect, memo, useRef, useMemo } from 'react';
-import { motion, AnimatePresence, Variants, useMotionValue, useTransform, animate, useSpring, useScroll } from 'framer-motion';
+import { motion, AnimatePresence, Variants, useMotionValue, useTransform, animate, useScroll } from 'framer-motion';
 import { 
-  X, Star, Play, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon, MonitorPlay, Bell, BellRing, Clock
+  X, Star, CheckCircle2, Heart, PlayCircle, ChevronDown, Check, BarChart3, Sparkles, Loader2, Bookmark, User as UserIcon, MonitorPlay, Bell, BellRing, Clock
 } from 'lucide-react';
-import { Movie, Episode, Person, Season, StreamingPlatform, User } from './types';
-import * as GeminiAPI from './geminiService';
-import * as TmdbAPI from './tmdbService';
-import { FALLBACK_POSTER, getCommunityRating, MovieCard, triggerHaptic } from './SharedUI';
+import { Movie, Episode, Season, StreamingPlatform } from '../types';
+import * as GeminiAPI from '../services/gemini';
+import * as TmdbAPI from '../services/tmdb';
+import { FALLBACK_POSTER, getCommunityRating, triggerHaptic } from '../utils';
+import { StarRating } from '../components/ui/StarRating';
+import { MovieCard } from '../components/movie/MovieCard';
 
 const API = TmdbAPI.hasApiKey() ? TmdbAPI : GeminiAPI;
 
@@ -29,53 +30,6 @@ const modalContent: Variants = {
     y: "110%", 
     transition: { duration: 0.25, ease: [0.32, 0.72, 0, 1] } 
   }
-};
-
-export const VideoModal = ({ url, onClose }: any) => {
-  const [loading, setLoading] = useState(true);
-  
-  const getVideoId = (u: string) => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = u.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
-
-  const videoId = getVideoId(url);
-  const embedUrl = videoId 
-    ? `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&origin=${encodeURIComponent(window.location.origin)}&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3` 
-    : url;
-  
-  return (
-    <motion.div 
-      initial="initial" animate="animate" exit="exit" variants={modalOverlay} 
-      className="fixed inset-0 z-[1000] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 overflow-hidden"
-    >
-      <button 
-        onClick={() => {
-          triggerHaptic('light');
-          onClose();
-        }} 
-        className="absolute top-6 right-6 w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-white z-[1010] active:scale-90 transition-transform hover:bg-white/20"
-      >
-        <X size={24} />
-      </button>
-      
-      <div className="w-full max-w-5xl flex flex-col gap-6">
-        <motion.div variants={modalContent} className="w-full aspect-video bg-black rounded-2xl overflow-hidden relative shadow-2xl border border-white/10">
-          {loading && <div className="absolute inset-0 flex items-center justify-center bg-[#050505]"><Loader2 className="animate-spin text-[#6B46C1]" size={32} /></div>}
-          <iframe 
-            src={embedUrl} 
-            title="Trailer" 
-            onLoad={() => setLoading(false)} 
-            className="w-full h-full" 
-            allowFullScreen 
-            referrerPolicy="strict-origin-when-cross-origin"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          />
-        </motion.div>
-      </div>
-    </motion.div>
-  );
 };
 
 const EpisodeDetailModal = memo(({ episode, seasonNumber, showTitle, onClose, isWatched, onToggleWatch }: any) => {
@@ -138,46 +92,7 @@ const EpisodeDetailModal = memo(({ episode, seasonNumber, showTitle, onClose, is
   );
 });
 
-const StarRating = memo(({ rating, onRate }: { rating: number, onRate: (n: number) => void }) => {
-  return (
-    <motion.div 
-      initial={{ opacity: 0, height: 0, scale: 0.95 }}
-      animate={{ opacity: 1, height: 'auto', scale: 1 }}
-      exit={{ opacity: 0, height: 0, scale: 0.95 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className="overflow-hidden w-full"
-    >
-      <div className="flex flex-col items-center justify-center py-2 px-4 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-xl mb-4">
-        <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <motion.button
-              key={star}
-              whileHover={{ scale: 1.2, rotate: 5 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => {
-                triggerHaptic('light');
-                onRate(star);
-              }}
-              className="relative p-0.5"
-            >
-              <Star 
-                size={22} 
-                fill={star <= rating ? "#FACC15" : "none"} 
-                className={`${star <= rating ? "text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]" : "text-gray-600/30"} transition-colors duration-300`}
-                strokeWidth={star <= rating ? 0 : 2}
-              />
-            </motion.button>
-          ))}
-        </div>
-        <p className={`text-[8px] font-black uppercase tracking-[0.3em] mt-1 transition-colors ${rating > 0 ? 'text-yellow-500' : 'text-gray-500'}`}>
-          {rating > 0 ? `SCORE: ${rating}/5` : "HOW WAS IT?"}
-        </p>
-      </div>
-    </motion.div>
-  );
-});
-
-export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setUser, onToggleWatchlist, onToggleWatched, onToggleFavorite, onToggleNotification, onRateMovie, onSelectPerson, onPlayTrailer, onShowToast }: any) => {
+export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setUser, onToggleWatchlist, onToggleWatched, onToggleFavorite, onToggleNotification, onRateMovie, onSelectPerson, onSelectMovie, onPlayTrailer, onShowToast }: any) => {
   const [movie, setMovie] = useState<Movie | null>(initialMovie);
   const [activeSeason, setActiveSeason] = useState(1);
   const [watchedEpisodes, setWatchedEpisodes] = useState<string[]>(user.watchedEpisodes || []);
@@ -353,7 +268,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
         >
            <motion.div 
              style={{ y: contentY }} 
-             className="pt-[35vh] px-6 pb-32 space-y-8 will-change-transform"
+             className="pt-[35vh] px-6 pb-16 space-y-8 will-change-transform"
              layout
            >
              <motion.div layout className="flex gap-6 items-end">
@@ -391,7 +306,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                </div>
              </motion.div>
 
-             <motion.div layout className="grid grid-cols-4 gap-3 mb-2">
+             <motion.div layout className="grid grid-cols-4 gap-3">
                 {isUnreleased ? (
                     <>
                       <button 
@@ -479,7 +394,7 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                 </motion.div>
               )}
 
-              <motion.div layout className="space-y-4">
+              <motion.div layout className="space-y-6">
                 <h4 className="text-[9px] font-black uppercase tracking-widest text-white/40">CAST & CREW</h4>
                 <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar">
                   {movie.cast.map((c: any, i: number) => (
@@ -489,21 +404,21 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
                         triggerHaptic('light');
                         onSelectPerson(c.name || c);
                       }} 
-                      className="flex-shrink-0 flex items-center gap-4 bg-white/[0.03] backdrop-blur-xl p-2.5 pr-6 rounded-2xl border border-white/10 active:scale-95 transition-all cursor-pointer hover:bg-white/[0.08] shadow-lg group w-64"
+                      className="flex-shrink-0 w-24 flex flex-col gap-3 group cursor-pointer active:scale-95 transition-transform"
                     >
-                      <div className="relative flex-shrink-0">
-                        <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center overflow-hidden shadow-md group-hover:scale-105 transition-transform">
+                      <div className="relative w-full aspect-[3/4.2] rounded-2xl border-2 border-white/10 overflow-hidden shadow-xl group-hover:border-[#6B46C1] transition-all bg-white/[0.03]">
                           {c.profile ? (
                             <img src={c.profile} className="w-full h-full object-cover" alt={c.name} loading="lazy" />
                           ) : (
-                            <UserIcon size={24} className="text-black" />
+                            <div className="w-full h-full flex items-center justify-center">
+                              <UserIcon size={24} className="text-white/10" />
+                            </div>
                           )}
-                        </div>
                       </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-black text-white leading-tight truncate">{c.name || c}</span>
+                      <div className="flex flex-col items-center text-center space-y-0.5 px-0.5">
+                        <span className="text-[10px] font-black text-white leading-tight">{c.name || c}</span>
                         {c.character && (
-                          <span className="text-[9px] font-bold text-[#9F7AEA] uppercase tracking-wider mt-1.5 truncate opacity-90">
+                          <span className="text-[8px] font-bold text-[#6B46C1] uppercase tracking-tight opacity-100">
                             {c.character}
                           </span>
                         )}
@@ -597,68 +512,6 @@ export const MovieDetailModal = memo(({ movie: initialMovie, onClose, user, setU
               )}
            </motion.div>
         </div>
-      </motion.div>
-    </motion.div>
-  );
-});
-
-export const PersonModal = memo(({ name, onClose, onSelectMovie }: any) => {
-  const [person, setPerson] = useState<Person | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isBioExpanded, setIsBioExpanded] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-    API.fetchPersonDetails(name).then(d => { setPerson(d); setLoading(false); });
-  }, [name]);
-
-  const isLongBio = person?.bio && person.bio.length > 250;
-
-  return (
-    <motion.div initial="initial" animate="animate" exit="exit" variants={modalOverlay} className="fixed inset-0 z-[450] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-hidden">
-      <motion.div variants={modalContent} className="bg-[#0F0F0F] w-full max-w-xl max-h-[85vh] rounded-[2rem] overflow-hidden flex flex-col relative border border-white/10 shadow-2xl">
-        <button 
-          onClick={() => {
-            triggerHaptic('light');
-            onClose();
-          }} 
-          className="absolute top-4 right-4 w-10 h-10 bg-white/10 rounded-full flex items-center justify-center z-[460] text-white active:scale-90 transition-transform hover:bg-white/20"
-        >
-          <X size={20} />
-        </button>
-        {loading ? <div className="flex-1 flex items-center justify-center min-h-[300px]"><Loader2 className="animate-spin text-[#6B46C1]" size={32} /></div> : person && (
-          <div className="flex-1 overflow-y-auto p-8 no-scrollbar">
-            <div className="flex flex-col items-center text-center mb-8">
-              <div className="w-28 h-28 rounded-[2rem] overflow-hidden border-2 border-white/10 mb-4 shadow-xl bg-gray-900">
-                <img src={person.photo || FALLBACK_POSTER} className="w-full h-full object-cover" />
-              </div>
-              <h2 className="text-2xl font-black text-white tracking-tight">{person.name}</h2>
-              <p className="text-[#6B46C1] font-bold text-[10px] uppercase tracking-widest mt-1">{person.role}</p>
-            </div>
-            
-            <p className={`text-sm text-gray-400 mb-2 leading-relaxed ${isBioExpanded ? '' : 'line-clamp-4'}`}>
-              {person.bio}
-            </p>
-            {isLongBio && (
-              <button 
-                onClick={() => {
-                  triggerHaptic('light');
-                  setIsBioExpanded(!isBioExpanded);
-                }} 
-                className="text-[#6B46C1] text-[10px] font-black uppercase tracking-widest mb-8 hover:text-white transition-colors"
-              >
-                {isBioExpanded ? 'Read Less' : 'Read More'}
-              </button>
-            )}
-
-            {!isLongBio && <div className="mb-6"></div>}
-
-            <h4 className="text-[9px] font-black uppercase tracking-widest text-white/30 mb-4">KNOWN FOR</h4>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-8 px-8">
-              {person.knownFor.map((m: any) => (<MovieCard key={m.id} movie={m} onClick={() => { onSelectMovie(m); onClose(); }} />))}
-            </div>
-          </div>
-        )}
       </motion.div>
     </motion.div>
   );

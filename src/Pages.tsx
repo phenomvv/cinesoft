@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, memo } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -488,12 +487,12 @@ export const ProfilePage = memo(({ user, setUser, onSelectMovie }: any) => {
     return "Casual Viewer";
   };
 
-  const staggerVariants: Variants = {
+  const staggerVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: (i: number) => ({
       opacity: 1,
       y: 0,
-      transition: { delay: i * 0.1, duration: 0.5, ease: "easeOut" as const }
+      transition: { delay: i * 0.1, duration: 0.5, ease: "easeOut" as any }
     })
   };
 

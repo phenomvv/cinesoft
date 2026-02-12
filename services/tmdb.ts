@@ -1,5 +1,5 @@
 
-import { Movie, Person, Season, Episode, StreamingPlatform } from "./types";
+import { Movie, Person, Season, Episode, StreamingPlatform } from "../types";
 
 const API_KEY = process.env.TMDB_API_KEY || '717d9fe49eec21ec222a75e01c58e79c'; 
 
@@ -148,6 +148,16 @@ export const fetchRecommendations = async (likedTitles: string[], kidsMode: bool
     if (kidsMode) { params['certification_country'] = 'US'; params['certification.lte'] = 'PG-13'; }
     const data = await fetchTMDB('/trending/all/day', params);
     return data?.results?.map(mapMovie) || [];
+  } catch (e) { return []; }
+};
+
+export const fetchSimilarMovies = async (id: string, type: 'movie' | 'show', kidsMode: boolean = false): Promise<Movie[]> => {
+  try {
+    const endpoint = type === 'movie' ? `/movie/${id}/recommendations` : `/tv/${id}/recommendations`;
+    const params: Record<string, string> = {};
+    if (kidsMode) { params['certification_country'] = 'US'; params['certification.lte'] = 'PG-13'; }
+    const data = await fetchTMDB(endpoint, params);
+    return data?.results?.slice(0, 6).map((m: any) => ({ ...mapMovie(m), type })) || [];
   } catch (e) { return []; }
 };
 

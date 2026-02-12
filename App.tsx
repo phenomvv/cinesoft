@@ -1,12 +1,16 @@
 
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { Movie, User } from './types';
-import * as GeminiAPI from './geminiService';
-import * as TmdbAPI from './tmdbService';
-import { GlobalHeader, BottomNav, Toast } from './SharedUI';
+import * as GeminiAPI from './services/gemini';
+import * as TmdbAPI from './services/tmdb';
+
+// New Imports
+import { GlobalHeader, BottomNav } from './components/layout/Navigation';
+import { Toast } from './components/ui/Common';
+import { LandingPage } from './pages/Landing';
 
 const API = TmdbAPI.hasApiKey() ? TmdbAPI : GeminiAPI;
 
@@ -28,20 +32,22 @@ const DEFAULT_USER: User = {
   notificationIds: []
 };
 
-const HomePage = lazy(() => import('./Pages').then(m => ({ default: m.HomePage })));
-const ExplorePage = lazy(() => import('./Pages').then(m => ({ default: m.ExplorePage })));
-const LibraryPage = lazy(() => import('./Pages').then(m => ({ default: m.LibraryPage })));
-const ProfilePage = lazy(() => import('./Pages').then(m => ({ default: m.ProfilePage })));
-const MovieDetailModal = lazy(() => import('./Modals').then(m => ({ default: m.MovieDetailModal })));
-const PersonModal = lazy(() => import('./Modals').then(m => ({ default: m.PersonModal })));
-const VideoModal = lazy(() => import('./Modals').then(m => ({ default: m.VideoModal })));
+// Lazy load from new locations
+const HomePage = lazy(() => import('./pages/Home').then(m => ({ default: m.HomePage })));
+const ExplorePage = lazy(() => import('./pages/Explore').then(m => ({ default: m.ExplorePage })));
+const LibraryPage = lazy(() => import('./pages/Library').then(m => ({ default: m.LibraryPage })));
+const ProfilePage = lazy(() => import('./pages/Profile').then(m => ({ default: m.ProfilePage })));
+const SettingsPage = lazy(() => import('./pages/Settings').then(m => ({ default: m.SettingsPage })));
+const MovieDetailModal = lazy(() => import('./modals/MovieDetailModal').then(m => ({ default: m.MovieDetailModal })));
+const PersonModal = lazy(() => import('./modals/PersonModal').then(m => ({ default: m.PersonModal })));
+const VideoModal = lazy(() => import('./modals/VideoModal').then(m => ({ default: m.VideoModal })));
 
 const App = () => {
-  const [user, setUser] = useState<User>(() => { 
+  const [user, setUser] = useState<User | null>(() => { 
     try {
       const saved = localStorage.getItem('cinesoft_user'); 
-      return saved ? { ...DEFAULT_USER, ...JSON.parse(saved) } : DEFAULT_USER; 
-    } catch { return DEFAULT_USER; }
+      return saved ? JSON.parse(saved) : null; 
+    } catch { return null; }
   });
   
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
@@ -58,6 +64,21 @@ const App = () => {
   const isModalOpen = !!(selectedMovie || selectedPerson || activeTrailerUrl);
 
   const showToast = (message: string) => setToast(message);
+
+  const handleLogin = (type: 'google' | 'email') => {
+    // Simulate Login
+    const newUser = {
+      ...DEFAULT_USER,
+      name: type === 'google' ? 'Alex Chen' : 'Alex Chen',
+      email: type === 'google' ? 'alex.c@gmail.com' : 'alex@email.com',
+      avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200',
+    };
+    setUser(newUser);
+  };
+
+  const handleGuest = () => {
+    setUser(DEFAULT_USER);
+  };
 
   const handlePlayTrailer = async (movie: Movie) => {
     if (movie.trailerUrl) {
@@ -78,10 +99,14 @@ const App = () => {
   };
   
   useEffect(() => { 
-    localStorage.setItem('cinesoft_user', JSON.stringify(user)); 
+    if (user) {
+      localStorage.setItem('cinesoft_user', JSON.stringify(user)); 
+    }
   }, [user]);
   
   useEffect(() => { 
+    if (!user) return;
+    
     let mounted = true;
     const loadHomeData = async () => { 
       setLoading(true); 
@@ -89,7 +114,7 @@ const App = () => {
         const [m, s, r, a] = await Promise.all([
           API.fetchTrendingMovies(user.isKidsMode), 
           API.fetchTrendingShows(user.isKidsMode), 
-          API.fetchRecommendations(user.watchlist.map(m => m.title), user.isKidsMode),
+          API.fetchRecommendations(user.watchlist.map((m: Movie) => m.title), user.isKidsMode),
           API.fetchUpcomingMovies(user.isKidsMode)
         ]); 
         if (mounted) {
@@ -106,50 +131,61 @@ const App = () => {
     }; 
     loadHomeData(); 
     return () => { mounted = false; };
-  }, [user.isKidsMode]);
+  }, [user?.isKidsMode]);
 
   const onToggleWatchlist = (movie: Movie) => setUser(prev => { 
-    const exists = prev.watchlist.find(m => m.id === movie.id); 
-    return { ...prev, watchlist: exists ? prev.watchlist.filter(m => m.id !== movie.id) : [...prev.watchlist, movie] }; 
+    if (!prev) return prev;
+    const exists = prev.watchlist.find((m: Movie) => m.id === movie.id); 
+    return { ...prev, watchlist: exists ? prev.watchlist.filter((m: Movie) => m.id !== movie.id) : [...prev.watchlist, movie] }; 
   });
   
   const onToggleWatched = (movie: Movie) => setUser(prev => { 
+    if (!prev) return prev;
     const exists = prev.watched.includes(movie.id); 
     const updatedHistory = exists 
-      ? prev.watchedHistory.filter(m => m.id !== movie.id) 
+      ? prev.watchedHistory.filter((m: Movie) => m.id !== movie.id) 
       : [...prev.watchedHistory, movie];
     return { 
       ...prev, 
-      watched: exists ? prev.watched.filter(id => id !== movie.id) : [...prev.watched, movie.id],
+      watched: exists ? prev.watched.filter((id: string) => id !== movie.id) : [...prev.watched, movie.id],
       watchedHistory: updatedHistory
     }; 
   });
 
   const onToggleFavorite = (movie: Movie) => setUser(prev => {
+    if (!prev) return prev;
     const exists = prev.favoriteMovieIds.includes(movie.id);
     const updatedIds = exists 
-      ? prev.favoriteMovieIds.filter(id => id !== movie.id) 
+      ? prev.favoriteMovieIds.filter((id: string) => id !== movie.id) 
       : [...prev.favoriteMovieIds, movie.id];
     const updatedList = exists 
-      ? prev.favorites.filter(m => m.id !== movie.id) 
+      ? prev.favorites.filter((m: Movie) => m.id !== movie.id) 
       : [...prev.favorites, movie];
     return { ...prev, favoriteMovieIds: updatedIds, favorites: updatedList };
   });
 
   const onToggleNotification = (movie: Movie) => setUser(prev => {
+    if (!prev) return prev;
     const exists = prev.notificationIds?.includes(movie.id);
     const updatedIds = exists 
-      ? prev.notificationIds.filter(id => id !== movie.id) 
+      ? prev.notificationIds.filter((id: string) => id !== movie.id) 
       : [...(prev.notificationIds || []), movie.id];
     return { ...prev, notificationIds: updatedIds };
   });
 
   const onRateMovie = (movieId: string, rating: number) => {
-    setUser(prev => ({
-      ...prev,
-      userRatings: { ...prev.userRatings, [movieId]: rating }
-    }));
+    setUser(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        userRatings: { ...prev.userRatings, [movieId]: rating }
+      };
+    });
   };
+
+  if (!user) {
+    return <LandingPage onLogin={handleLogin} onGuest={handleGuest} />;
+  }
 
   return (
     <div className="min-h-screen font-sans bg-[#050505] text-[#F5F5F5]">
@@ -165,7 +201,9 @@ const App = () => {
               <Route path="/" element={<HomePage trendingM={trendingMovies} trendingS={trendingShows} anticipatedM={anticipatedMovies} recommendations={recommendations} loading={loading} user={user} onSelectMovie={setSelectedMovie} onPlayTrailer={handlePlayTrailer} />} />
               <Route path="/search" element={<ExplorePage onSelectMovie={setSelectedMovie} user={user} />} />
               <Route path="/library" element={<LibraryPage user={user} onSelectMovie={setSelectedMovie} />} />
-              <Route path="/profile" element={<ProfilePage user={user} setUser={setUser} />} />
+              <Route path="/profile" element={<ProfilePage user={user} setUser={setUser} onSelectMovie={setSelectedMovie} />} />
+              <Route path="/settings" element={<SettingsPage user={user} setUser={setUser} />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
         </motion.div>
@@ -190,6 +228,7 @@ const App = () => {
                 onToggleNotification={onToggleNotification}
                 onRateMovie={onRateMovie}
                 onSelectPerson={setSelectedPerson} 
+                onSelectMovie={setSelectedMovie}
                 onPlayTrailer={handlePlayTrailer}
                 onShowToast={showToast} 
               />
